@@ -1,0 +1,228 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1">
+  <Class Name="RogueSharp.Things.Item&lt;TKind&gt;" Collapsed="true">
+    <Position X="1.5" Y="6.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAABhIRAIAAAAAAAAAAAABAEQABCAAAEAAAA=</HashCode>
+      <FileName>Things\Item.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="RogueSharp.Things.Monster" Collapsed="true">
+    <Position X="32" Y="6.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>EAAAAQAQQEIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Things\Monster.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="RogueSharp.Things.Room" Collapsed="true">
+    <Position X="62.5" Y="5.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAGAAAAAAACIAAAACABAAAAAAAAAQAAAAAAAAAA=</HashCode>
+      <FileName>Things\Room.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="RogueSharp.Things.Stats" Collapsed="true">
+    <Position X="64.25" Y="5.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAABBAAAAAAAAAAAAAAEAIAAEIAAAEAAAA=</HashCode>
+      <FileName>Things\Stats.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="RogueSharp.Things.Thing" Collapsed="true">
+    <Position X="30.75" Y="5.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAgAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Things\Thing.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="RogueSharp.Monsters.Aquator" Collapsed="true">
+    <Position X="3.75" Y="8.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>EAAAAQAAQEIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Monsters\Aquator.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="RogueSharp.Monsters.Bat" Collapsed="true">
+    <Position X="15" Y="8.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>EAAAAQAAQEIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Monsters\Bat.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="RogueSharp.Monsters.Centaur" Collapsed="true">
+    <Position X="26.25" Y="8.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>EAAAAQAAQEIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Monsters\Centaur.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="RogueSharp.Monsters.Dragon" Collapsed="true">
+    <Position X="35.25" Y="8.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>EAAAAQAAQEIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Monsters\Dragon.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="RogueSharp.Monsters.Emu" Collapsed="true">
+    <Position X="44.25" Y="8.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>EAAAAQAAQEIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Monsters\Emu.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="RogueSharp.Monsters.Flytrap" Collapsed="true">
+    <Position X="53.25" Y="8.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>EAAAAQAAQEIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Monsters\Flytrap.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="RogueSharp.Monsters.Griffin" Collapsed="true">
+    <Position X="6" Y="8.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>EAAAAQAAQEIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Monsters\Griffin.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="RogueSharp.Monsters.Hobgoblin" Collapsed="true">
+    <Position X="17.25" Y="8.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>EAAAAQAAQEIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Monsters\Hobgoblin.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="RogueSharp.Monsters.IceMonster" Collapsed="true">
+    <Position X="28.5" Y="8.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>EAAAAQAAQEIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Monsters\IceMonster.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="RogueSharp.Monsters.Jabberwock" Collapsed="true">
+    <Position X="37.5" Y="8.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>EAAAAQAAQEIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Monsters\Jabberwock.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="RogueSharp.Monsters.Kestrel" Collapsed="true">
+    <Position X="46.5" Y="8.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>EAAAAQAAQEIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Monsters\Kestrel.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="RogueSharp.Monsters.Leprechaun" Collapsed="true">
+    <Position X="55.5" Y="8.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>EAAAAQAAQEIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Monsters\Leprechaun.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="RogueSharp.Monsters.Medusa" Collapsed="true">
+    <Position X="8.25" Y="8.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>EAAAAQAAQEIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Monsters\Medusa.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="RogueSharp.Monsters.Nymph" Collapsed="true">
+    <Position X="19.5" Y="8.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>EAAAAQAAQEIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Monsters\Nymph.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="RogueSharp.Monsters.Orc" Collapsed="true">
+    <Position X="30.75" Y="8.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>EAAAAQAAQEIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Monsters\Orc.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="RogueSharp.Monsters.Phantom" Collapsed="true">
+    <Position X="39.75" Y="8.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>EAAAAQAAQEIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Monsters\Phantom.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="RogueSharp.Monsters.Quagga" Collapsed="true">
+    <Position X="48.75" Y="8.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>EAAAAQAAQEIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Monsters\Quagga.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="RogueSharp.Monsters.Rattlesnake" Collapsed="true">
+    <Position X="57.75" Y="8.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>EAAAAQAAQEIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Monsters\Rattlesnake.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="RogueSharp.Monsters.Snake" Collapsed="true">
+    <Position X="10.5" Y="8.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>EAAAAQAAQEIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Monsters\Snake.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="RogueSharp.Monsters.Troll" Collapsed="true">
+    <Position X="21.75" Y="8.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>EAAAAQAAQEIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Monsters\Troll.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="RogueSharp.Monsters.Unicorn" Collapsed="true">
+    <Position X="33" Y="8.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>EAAAAQAAQEIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Monsters\Unicorn.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="RogueSharp.Monsters.Vampire" Collapsed="true">
+    <Position X="42" Y="8.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>EAAAAQAAQEIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Monsters\Vampire.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="RogueSharp.Monsters.Wraith" Collapsed="true">
+    <Position X="51" Y="8.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>EAAAAQAAQEIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Monsters\Wraith.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="RogueSharp.Monsters.Xeroc" Collapsed="true">
+    <Position X="60" Y="8.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>EAAAAQAAQEIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Monsters\Xeroc.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="RogueSharp.Monsters.Yeti" Collapsed="true">
+    <Position X="12.75" Y="8.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>EAAAAQAAQEIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Monsters\Yeti.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="RogueSharp.Monsters.Zombie" Collapsed="true">
+    <Position X="24" Y="8.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>EAAAAQAAQEIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Monsters\Zombie.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Struct Name="RogueSharp.Things.Coordinate" Collapsed="true">
+    <Position X="62.5" Y="6.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAYAA=</HashCode>
+      <FileName>Things\Coordinate.cs</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Font Name="Segoe UI" Size="9" />
+</ClassDiagram>

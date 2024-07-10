@@ -1,0 +1,30 @@
+﻿See also: Virtual Terminal Sequences
+https://learn.microsoft.com/en-us/windows/console/console-virtual-terminal-sequences#designate-character-set
+
+
+https://en.wikipedia.org/wiki/Box-drawing_characters
+
+
+Box Drawing[1]
+Official Unicode Consortium code chart (PDF)
+ 	0	1	2	3	4	5	6	7	8	9	A	B	C	D	E	F
+U+250x	─	━	│	┃	┄	┅	┆	┇	┈	┉	┊	┋	┌	┍	┎	┏
+U+251x	┐	┑	┒	┓	└	┕	┖	┗	┘	┙	┚	┛	├	┝	┞	┟
+U+252x	┠	┡	┢	┣	┤	┥	┦	┧	┨	┩	┪	┫	┬	┭	┮	┯
+U+253x	┰	┱	┲	┳	┴	┵	┶	┷	┸	┹	┺	┻	┼	┽	┾	┿
+U+254x	╀	╁	╂	╃	╄	╅	╆	╇	╈	╉	╊	╋	╌	╍	╎	╏
+U+255x	═	║	╒	╓	╔	╕	╖	╗	╘	╙	╚	╛	╜	╝	╞	╟
+U+256x	╠	╡	╢	╣	╤	╥	╦	╧	╨	╩	╪	╫	╬	╭	╮	╯
+U+257x	╰	╱	╲	╳	╴	╵	╶	╷	╸	╹	╺	╻	╼	╽	╾	╿
+
+
+Block Elements
+The Block Elements Unicode block includes shading characters. 32 characters are included in the block.
+
+Block Elements[1]
+Official Unicode Consortium code chart (PDF)
+ 	0	1	2	3	4	5	6	7	8	9	A	B	C	D	E	F
+U+258x	▀	▁	▂	▃	▄	▅	▆	▇	█	▉	▊	▋	▌	▍	▎	▏
+U+259x	▐	░	▒	▓	▔	▕	▖	▗	▘	▙	▚	▛	▜	▝	▞	▟
+Notes
+1.^ As of Unicode version 15.1

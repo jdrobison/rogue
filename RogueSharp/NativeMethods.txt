@@ -1,0 +1,3 @@
+GetStdHandle
+ReadConsoleOutputCharacter
+WriteConsoleOutput
