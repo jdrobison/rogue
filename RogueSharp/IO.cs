@@ -13,8 +13,8 @@ internal partial class Program
     private int MAXMSG => NUMCOLS - "--More--".Length;
     private int msgbufLength => (2 * MAXMSG) + 1;
 
-    static string msgbuf;
-    static int newpos = 0;
+    private string _io_msgbuf = string.Empty;
+    private int _io_newpos = 0;
 
     /// <summary>
     /// Display a message at the top of the screen.
@@ -53,7 +53,8 @@ internal partial class Program
     int endmsg()
     {
         if (save_msg)
-            huh = msgbuf;
+            huh = _io_msgbuf;
+
         if (mpos != 0)
         {
             look(false);
@@ -69,9 +70,9 @@ internal partial class Program
                 {
                     if (key == ConsoleKey.Escape)
                     {
-                        msgbuf = "";
+                        _io_msgbuf = "";
                         mpos = 0;
-                        newpos = 0;
+                        _io_newpos = 0;
                         return ESCAPE;
                     }
                 }
@@ -82,20 +83,20 @@ internal partial class Program
          * All messages should start with uppercase, except ones that
          * start with a pack addressing character
          */
-        if (Char.IsAsciiLetterLower(msgbuf[0]) && !lower_msg && msgbuf[1] != ')')
+        if (Char.IsAsciiLetterLower(_io_msgbuf[0]) && !lower_msg && _io_msgbuf[1] != ')')
         {
-            mvaddch(0, 0, Char.ToUpper(msgbuf[0]));
-            addstr(msgbuf.Substring(1));
+            mvaddch(0, 0, Char.ToUpper(_io_msgbuf[0]));
+            addstr(_io_msgbuf.Substring(1));
         }
         else
         {
-            mvaddstr(0, 0, msgbuf);
+            mvaddstr(0, 0, _io_msgbuf);
         }
 
         clrtoeol();
-        mpos = newpos;
-        newpos = 0;
-        msgbuf = "";
+        mpos = _io_newpos;
+        _io_newpos = 0;
+        _io_msgbuf = "";
         refresh();
         return ~ESCAPE;
     }
@@ -108,11 +109,11 @@ internal partial class Program
         string converted = PrintfHelper.ConvertFormatString(fmt);
         string addendum = string.Format(converted, args);
 
-        if (addendum.Length + newpos >= MAXMSG)
+        if (addendum.Length + _io_newpos >= MAXMSG)
             endmsg();
 
-        msgbuf += addendum;
-        newpos = msgbuf.Length;
+        _io_msgbuf += addendum;
+        _io_newpos = _io_msgbuf.Length;
     }
 
     /// <summary>

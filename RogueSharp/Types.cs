@@ -48,6 +48,19 @@ internal partial class Program
 
         public static bool operator ==(coord a, coord b) => a.x == b.x && a.y == b.y;
         public static bool operator !=(coord a, coord b) => !(a == b);
+
+        public override bool Equals(object? obj)
+        {
+            if (obj is coord other)
+                return this == other;
+
+            return false;
+        }
+
+        public override int GetHashCode()
+        {
+            return x ^ y;
+        }
     }
 
     /*

@@ -237,8 +237,10 @@ hit_bound:
                         case ConsoleKey.L:
                             b1 = (bool) (hero.y != 1 && turn_ok(hero.y - 1, hero.x));
                             b2 = (bool) (hero.y != NUMLINES - 2 && turn_ok(hero.y + 1, hero.x));
+                            
                             if (!(b1 ^ b2))
                                 break;
+                            
                             if (b1)
                             {
                                 runKey = new ConsoleKeyInfo('k', ConsoleKey.K, shift: false, alt: false, control: false);
@@ -249,6 +251,7 @@ hit_bound:
                                 runKey = new ConsoleKeyInfo('j', ConsoleKey.J, shift: false, alt: false, control: false);
                                 dy = 1;
                             }
+
                             dx = 0;
                             break;
 
@@ -256,8 +259,10 @@ hit_bound:
                         case ConsoleKey.K:
                             b1 = (bool) (hero.x != 0 && turn_ok(hero.y, hero.x - 1));
                             b2 = (bool) (hero.x != NUMCOLS - 1 && turn_ok(hero.y, hero.x + 1));
+                            
                             if (!(b1 ^ b2))
                                 break;
+                            
                             if (b1)
                             {
                                 runKey = new ConsoleKeyInfo('h', ConsoleKey.H, shift: false, alt: false, control: false);
@@ -268,6 +273,7 @@ hit_bound:
                                 runKey = new ConsoleKeyInfo('l', ConsoleKey.L, shift: false, alt: false, control: false);
                                 dx = 1;
                             }
+                            
                             dy = 0;
                             break;
                     }
@@ -325,7 +331,8 @@ hit_bound:
                 running = false;
                 if (char.IsUpper(ch) || (moat(_move_nh.y, _move_nh.x) != null))
                 {
-                    fight(_move_nh, cur_weapon, false);
+                    if (cur_weapon != null)
+                        fight(_move_nh, cur_weapon, false);
                 }
                 else
                 {
@@ -334,16 +341,17 @@ hit_bound:
 
                     MoveStuff();
                 }
+                
                 break;
+        }
 
-                // --- local method ---
-                void MoveStuff()
-                {
-                    mvaddch(hero.y, hero.x, floor_at());
-                    if (((fl & F_PASS) != 0) && chat(oldpos.y, oldpos.x) == DOOR)
-                        leave_room(_move_nh);
-                    hero = _move_nh;
-                }
+        // --- local method ---
+        void MoveStuff()
+        {
+            mvaddch(hero.y, hero.x, floor_at());
+            if (((fl & F_PASS) != 0) && chat(oldpos.y, oldpos.x) == DOOR)
+                leave_room(_move_nh);
+            hero = _move_nh;
         }
     }
 
@@ -370,6 +378,7 @@ hit_bound:
                 refresh();
                 leaveok(stdscr, false);
             }
+
             pp.p_flags |= F_SEEN;
         }
     }
@@ -458,6 +467,7 @@ hit_bound:
                         msg("you pack turns %s!", rainbow[rnd(cNCOLORS)]);
                         break;
                 }
+
                 break;
 
             case T_SLEEP:
@@ -487,6 +497,7 @@ hit_bound:
                     fall(arrow, false);
                     msg("an arrow shoots past you");
                 }
+
                 break;
 
             case T_TELEP:
@@ -506,15 +517,19 @@ hit_bound:
                 else
                 {
                     pstats.s_hpt -= roll(1, 4);
+                    
                     if (pstats.s_hpt <= 0)
                     {
                         msg("a poisoned dart killed you");
                         death('d');
                     }
+
                     if (!ISWEARING(R_SUSTSTR) && !save(VS_POISON))
                         chg_str(-1);
+                    
                     msg("a small dart just hit you in the shoulder");
                 }
+
                 break;
 
             case T_RUST:

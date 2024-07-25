@@ -86,6 +86,7 @@ internal partial class Program
                         addmsg(" by a shimmering %s light", pick_color("blue"));
                     endmsg();
                 }
+
                 break;
 
             case WS_DRAIN:
@@ -110,16 +111,20 @@ internal partial class Program
             case WS_CANCEL:
                 y = hero.y;
                 x = hero.x;
+                
                 while (step_ok(winat(y, x)))
                 {
                     y += delta.y;
                     x += delta.x;
                 }
+
                 if ((tp = moat(y, x)) != null)
                 {
                     monster = tp.t_type;
+                
                     if (monster == 'F')
                         player.t_flags &= ~ISHELD;
+                    
                     switch (obj.o_which)
                     {
                         case WS_INVIS:
@@ -173,6 +178,7 @@ internal partial class Program
                                 new_pos.y = hero.y + delta.y;
                                 new_pos.x = hero.x + delta.x;
                             }
+
                             tp.t_dest = hero;
                             tp.t_flags |= ISRUN;
                             relocate(tp, new_pos);
@@ -180,6 +186,7 @@ internal partial class Program
                         }
                     }
                 }
+
                 break;
 
             case WS_MISSILE:
@@ -192,15 +199,19 @@ internal partial class Program
                 bolt.o_hplus = 100;
                 bolt.o_dplus = 1;
                 bolt.o_flags = ISMISL;
+                
                 if (cur_weapon != null)
                     bolt.o_launch = cur_weapon.o_which;
+                
                 do_motion(bolt, delta.y, delta.x);
+                
                 if ((tp = moat(bolt.o_pos.y, bolt.o_pos.x)) != null && !save_throw(VS_MAGIC, tp))
                     hit_monster(bolt.o_pos.y, bolt.o_pos.x, bolt);
                 else if (terse)
                     msg("missle vanishes");
                 else
                     msg("the missle vanishes with a puff of smoke");
+                
                 break;
             }
 
@@ -208,11 +219,13 @@ internal partial class Program
             case WS_SLOW_M:
                 y = hero.y;
                 x = hero.x;
+                
                 while (step_ok(winat(y, x)))
                 {
                     y += delta.y;
                     x += delta.x;
                 }
+                
                 if ((tp = moat(y, x)) != null)
                 {
                     if (obj.o_which == WS_HASTE_M)
@@ -230,10 +243,12 @@ internal partial class Program
                             tp.t_flags |= ISSLOW;
                         tp.t_turn = true;
                     }
+                
                     delta.y = y;
                     delta.x = x;
                     runto(delta);
                 }
+                
                 break;
 
             case WS_ELECT:
@@ -311,7 +326,8 @@ internal partial class Program
          */
         for (int i = 0; i < cnt; i++)
         {
-            THING monster = drainee[i];
+            THING monster = drainee[i]!;
+
             if ((monster.t_stats.s_hpt -= cnt) <= 0)
                 killed(monster, see_monst(monster));
             else
@@ -337,6 +353,7 @@ internal partial class Program
         bolt.o_hplus = 100;
         bolt.o_dplus = 0;
         weap_info[FLAME].oi_name = name;
+        
         switch (dir.y + dir.x)
         {
             case 0:
@@ -351,12 +368,14 @@ internal partial class Program
                 dirch = '\\';
                 break;
         }
+        
         pos = start;
         hit_hero = (start != hero);
         used = false;
         changed = false;
 
         int i;
+        
         for (i = 0; i < spotpos.Length && !used; i++)
         {
             pos.y += dir.y;
@@ -431,20 +450,26 @@ internal partial class Program
                                 else
                                     death(moat(start.y, start.x)?.t_type ?? 'D');
                             }
+
                             used = true;
+                            
                             if (terse)
                                 msg("the %s hits", name);
                             else
                                 msg("you are hit by the %s", name);
                         }
                         else
+                        {
                             msg("the %s whizzes by you", name);
+                        }
                     }
+
                     mvaddch(pos.y, pos.x, dirch);
                     refresh();
                     break;
             }
         }
+        
         for (int j = 0; j < i; j++)
         {
             coord c2 = spotpos[j];

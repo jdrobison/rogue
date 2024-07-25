@@ -52,15 +52,13 @@ internal partial class Program
                     lp = op;
                 else
                 {
-                    while (op.o_type == obj.o_type && op.o_which != obj.o_which)
+                    while (op != null && op.o_type == obj.o_type && op.o_which != obj.o_which)
                     {
                         lp = op;
-                        if (next(op) == null)
-                            break;
-                        else
-                            op = next(op);
+                        op = next(op);
                     }
-                    if (op.o_type == obj.o_type && op.o_which == obj.o_which)
+
+                    if (op != null && op.o_type == obj.o_type && op.o_which == obj.o_which)
                     {
                         if (ISMULT(op.o_type))
                         {
@@ -75,22 +73,24 @@ internal partial class Program
                         else if (obj.o_group != 0)
                         {
                             lp = op;
-                            while (op.o_type == obj.o_type
-                                && op.o_which == obj.o_which
-                                && op.o_group != obj.o_group)
+
+                            while (op != null && 
+                                   op.o_type == obj.o_type &&
+                                   op.o_which == obj.o_which && 
+                                   op.o_group != obj.o_group)
                             {
                                 lp = op;
-                                if (next(op) == null)
-                                    break;
-                                else
-                                    op = next(op);
+                                op = next(op);
                             }
-                            if (op.o_type == obj.o_type
-                                && op.o_which == obj.o_which
-                                && op.o_group == obj.o_group)
+
+                            if (op != null &&
+                                op.o_type == obj.o_type &&
+                                op.o_which == obj.o_which && 
+                                op.o_group == obj.o_group)
                             {
                                 op.o_count += obj.o_count;
                                 inpack--;
+                                
                                 if (!pack_room(from_floor, obj))
                                     return;
 
@@ -100,7 +100,9 @@ internal partial class Program
                             }
                         }
                         else
+                        {
                             lp = op;
+                        }
                     }
 
                     break;
@@ -391,12 +393,16 @@ internal partial class Program
             {
                 if (!terse)
                     addmsg("which object do you want to ");
+                
                 addmsg(purpose);
+
                 if (terse)
                     addmsg(" what");
+                
                 msg("? (* for list): ");
                 ch = readchar().KeyChar;
                 mpos = 0;
+                
                 /*
                  * Give the poor player a chance to abort the command
                  */
@@ -407,29 +413,40 @@ internal partial class Program
                     msg("");
                     return null;
                 }
+
                 n_objs = 1;     /* normal case: person types one char */
+
                 if (ch == '*')
                 {
                     mpos = 0;
+                    
                     if (inventory(pack, type))
                     {
                         after = false;
                         return null;
                     }
+
                     continue;
                 }
+
                 for (obj = pack; obj != null; obj = next(obj))
+                {
                     if (obj.o_packch == ch)
                         break;
+                }
+
                 if (obj == null)
                 {
                     msg("'%s' is not a valid item", unctrl(ch));
                     continue;
                 }
                 else
+                {
                     return obj;
+                }
             }
         }
+
         return null;
     }
 

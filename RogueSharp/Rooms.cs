@@ -55,8 +55,9 @@ internal partial class Program
             /*
              * Find upper left corner of box that this room goes in
              */
-            top.x = (i % 3) * bsze.x + 1;
-            top.y = (i / 3) * bsze.y;
+            top.x = (i % 3 * bsze.x) + 1;
+            top.y = i / 3 * bsze.y;
+            
             if ((room.r_flags & ISGONE) != 0)
             {
                 /*
@@ -72,6 +73,7 @@ internal partial class Program
                 } while (!((room.r_pos.y > 0) && (room.r_pos.y < NUMLINES-1)));
                 continue;
             }
+            
             /*
              * set room type
              */
@@ -81,6 +83,7 @@ internal partial class Program
                 if (rnd(15) == 0)
                     room.r_flags = ISMAZE;       /* maze room */
             }
+            
             /*
              * Find a place and size for a random room
              */
@@ -108,6 +111,7 @@ internal partial class Program
             }
 
             draw_room(room);
+            
             /*
              * Put the gold in
              */
@@ -125,6 +129,7 @@ internal partial class Program
                 gold.o_type = GOLD;
                 attach(ref lvl_obj, gold);
             }
+            
             /*
              * Put the monster in
              */
@@ -227,6 +232,7 @@ internal partial class Program
         for (; ; )
         {
             cnt = 0;
+            
             foreach (coord cp in _dig_del)
             {
                 newy = y + cp.y;
@@ -241,10 +247,13 @@ internal partial class Program
                     nextx = newx;
                 }
             }
+
             if (cnt == 0)
                 return;
+            
             accnt_maze(y, x, nexty, nextx);
             accnt_maze(nexty, nextx, y, x);
+            
             if (nexty == y)
             {
                 _dig_pos.y = y + Starty;
@@ -261,6 +270,7 @@ internal partial class Program
                 else
                     _dig_pos.y = nexty + Starty - 1;
             }
+            
             putpass(_dig_pos);
             _dig_pos.y = nexty + Starty;
             _dig_pos.x = nextx + Startx;
@@ -307,31 +317,37 @@ internal partial class Program
         PLACE place;
         int cnt;
         char compchar = '\0';
-        bool pickroom = (room == null);
 
         coord = new coord();
 
-        if (!pickroom)
+        if (room != null)
             compchar = (((room.r_flags & ISMAZE) != 0) ? PASSAGE : FLOOR);
+
         cnt = limit;
+        
         for (; ; )
         {
             if (limit != 0 && cnt-- == 0)
                 return false;
-            if (pickroom)
+        
+            if (room == null)
             {
                 room = rooms[rnd_room()];
                 compchar = (((room.r_flags & ISMAZE) != 0) ? PASSAGE : FLOOR);
             }
+            
             coord = rnd_pos(room);
             place = INDEX(coord.y, coord.x);
+            
             if (monst)
             {
                 if (place.p_monst == null && step_ok(place.p_ch))
                     return true;
             }
             else if (place.p_ch == compchar)
+            {
                 return true;
+            }
         }
     }
 
@@ -407,6 +423,7 @@ internal partial class Program
             floor = ' ';
 
         proom = passages[flat(cp.y, cp.x) & F_PNUM];
+        
         for (y = room.r_pos.y; y < room.r_max.y + room.r_pos.y; y++)
         {
             for (x = room.r_pos.x; x < room.r_max.x + room.r_pos.x; x++)
@@ -418,6 +435,7 @@ internal partial class Program
                         if (floor == ' ' && ch != ' ')
                             addch(' ');
                         break;
+                    
                     default:
                         /*
                          * to check for monster, we have to strip out
@@ -432,9 +450,11 @@ internal partial class Program
                                 standend();
                                 break;
                             }
+
                             place = INDEX(y, x);
                             addch(place.p_ch == DOOR ? DOOR : floor);
                         }
+
                         break;
                 }
             }

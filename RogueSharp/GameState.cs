@@ -48,7 +48,7 @@ internal partial class Program
 
     private ConsoleKeyInfo dirKey;                          /* Direction from last get_dir() call */
     private string file_name;                               /* Save file name */
-    private string huh;                                     /* The last message printed */
+    private string huh = string.Empty;                      /* The last message printed */
     private string[] p_colors = new string[MAXPOTIONS];     /* Colors of the potions */
 //  private string prbuf;                                   /* buffer for sprintfs */
     private string[] r_stones = new string[MAXRINGS];       /* Stone settings of the rings */
@@ -158,13 +158,13 @@ internal partial class Program
     public THING player = new();                /* His stats */
     /* restart of game */
 
-    private WINDOW hw;                          /* used as a scratch window */
+    private WINDOW hw = null!;                  /* used as a scratch window */
 
     private static readonly stats INIT_STATS = new(16, 0, 1, 10, 12, "1x4", 12);
 
     private stats max_stats = new(INIT_STATS);          /* The maximum for the player */
 
-    private room oldrp;                                 /* Roomin(&oldpos) */
+    private room oldroom = null!;                         /* Roomin(&oldpos) */
     private room[] rooms = new room[MAXROOMS];          /* One for each room -- A level */
     private room[] passages = new room[MAXPASS]         /* One for each passage */
     {

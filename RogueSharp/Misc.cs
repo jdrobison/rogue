@@ -20,7 +20,7 @@ internal partial class Program
         char ch;
         THING? tp;
         PLACE pp;
-        room rp;
+        room room;
         int ey, ex;
         int passcount;
         short pfl, fp;
@@ -33,164 +33,181 @@ internal partial class Program
         lookDone = true;
 #endif
         passcount = 0;
-        rp = proom;
+        room = proom;
+
         if (!ce(oldpos, hero))
         {
-            erase_lamp(oldpos, oldrp);
+            erase_lamp(oldpos, oldroom);
             oldpos = hero;
-            oldrp = rp;
+            oldroom = room;
         }
+
         ey = hero.y + 1;
         ex = hero.x + 1;
         sx = hero.x - 1;
         sy = hero.y - 1;
+
         if (door_stop && !firstmove && running)
         {
             sumhero = hero.y + hero.x;
             diffhero = hero.y - hero.x;
         }
+
         pp = INDEX(hero.y, hero.x);
         pch = pp.p_ch;
         pfl = pp.p_flags;
 
         for (y = sy; y <= ey; y++)
         {
-            if (y > 0 && y < NUMLINES - 1) for (x = sx; x <= ex; x++)
+            if (y > 0 && y < NUMLINES - 1)
             {
-                if (x < 0 || x >= NUMCOLS)
-                    continue;
-                if (!on(player, ISBLIND))
+                for (x = sx; x <= ex; x++)
                 {
-                    if (y == hero.y && x == hero.x)
+                    if (x < 0 || x >= NUMCOLS)
                         continue;
-                }
-
-                pp = INDEX(y, x);
-                ch = pp.p_ch;
-                if (ch == ' ')      /* nothing need be done with a ' ' */
-                    continue;
-                fp = pp.p_flags;
-                if (pch != DOOR && ch != DOOR)
-                    if ((pfl & F_PASS) != (fp & F_PASS))
-                        continue;
-                if (((fp & F_PASS)  != 0 || ch == DOOR) &&
-                    ((pfl & F_PASS) != 0 || pch == DOOR))
-                {
-                    if (hero.x != x && hero.y != y &&
-                        !step_ok(chat(y, hero.x)) && !step_ok(chat(hero.y, x)))
-                        continue;
-                }
-
-                if ((tp = pp.p_monst) == null)
-                    ch = trip_ch(y, x, ch);
-                else if (on(player, SEEMONST) && on(tp, ISINVIS))
-                {
-                    if (door_stop && !firstmove)
-                        running = false;
-                    continue;
-                }
-                else
-                {
-                    if (wakeup)
-                        wake_monster(y, x);
-                    if (see_monst(tp))
+                    
+                    if (!on(player, ISBLIND))
                     {
-                        if (on(player, ISHALU))
-                            ch = (char) (rnd(26) + 'A');
-                        else
-                            ch = tp.t_disguise;
-                    }
-                }
-                if (on(player, ISBLIND) && (y != hero.y || x != hero.x))
-                    continue;
-
-                move(y, x);
-
-                if ((proom.r_flags & ISDARK) != 0 && !see_floor && ch == FLOOR)
-                    ch = ' ';
-
-                if (tp != null || ch != CCHAR(inch()))
-                    addch(ch);
-
-                if (door_stop && !firstmove && running)
-                {
-                    switch (runKey.Key)
-                    {
-                        case ConsoleKey.H:
-                        case ConsoleKey.LeftArrow:
-                        case ConsoleKey.NumPad4:
-                            if (x == ex)
-                                continue;
-                            break;
-
-                        case ConsoleKey.J:
-                        case ConsoleKey.DownArrow:
-                        case ConsoleKey.NumPad2:
-                            if (y == sy)
-                                continue;
-                            break;
-
-                        case ConsoleKey.K:
-                        case ConsoleKey.UpArrow:
-                        case ConsoleKey.NumPad8:
-                            if (y == ey)
-                                continue;
-                            break;
-
-                        case ConsoleKey.L:
-                        case ConsoleKey.RightArrow:
-                        case ConsoleKey.NumPad6:
-                            if (x == sx)
-                                continue;
-                            break;
-
-                        case ConsoleKey.Y:
-                        case ConsoleKey.Home:
-                        case ConsoleKey.NumPad7:
-                            if ((y + x) - sumhero >= 1)
-                                continue;
-                            break;
-
-                        case ConsoleKey.U:
-                        case ConsoleKey.PageUp:
-                        case ConsoleKey.NumPad9:
-                            if ((y - x) - diffhero >= 1)
-                                continue;
-                            break;
-
-                        case ConsoleKey.N:
-                        case ConsoleKey.PageDown:
-                        case ConsoleKey.NumPad3:
-                            if ((y + x) - sumhero <= -1)
-                                continue;
-                            break;
-
-                        case ConsoleKey.B:
-                        case ConsoleKey.End:
-                        case ConsoleKey.NumPad1:
-                            if ((y - x) - diffhero <= -1)
-                                continue;
-                            break;
+                        if (y == hero.y && x == hero.x)
+                            continue;
                     }
 
-                    switch (ch)
+                    pp = INDEX(y, x);
+                    ch = pp.p_ch;
+
+                    if (ch == ' ')      /* nothing need be done with a ' ' */
+                        continue;
+
+                    fp = pp.p_flags;
+
+                    if (pch != DOOR && ch != DOOR)
                     {
-                        case DOOR:
-                            if (x == hero.x || y == hero.y)
-                                running = false;
-                            break;
-                        case PASSAGE:
-                            if (x == hero.x || y == hero.y)
-                                passcount++;
-                            break;
-                        case FLOOR:
-                        case '|':
-                        case '-':
-                        case ' ':
-                            break;
-                        default:
+                        if ((pfl & F_PASS) != (fp & F_PASS))
+                            continue;
+                    }
+
+                    if (((fp & F_PASS)  != 0 || ch == DOOR) &&
+                        ((pfl & F_PASS) != 0 || pch == DOOR))
+                    {
+                        if (hero.x != x && hero.y != y &&
+                            !step_ok(chat(y, hero.x)) && !step_ok(chat(hero.y, x)))
+                            continue;
+                    }
+
+                    if ((tp = pp.p_monst) == null)
+                    {
+                        ch = trip_ch(y, x, ch);
+                    }
+                    else if (on(player, SEEMONST) && on(tp, ISINVIS))
+                    {
+                        if (door_stop && !firstmove)
                             running = false;
-                            break;
+                        continue;
+                    }
+                    else
+                    {
+                        if (wakeup)
+                            wake_monster(y, x);
+                        if (see_monst(tp))
+                        {
+                            if (on(player, ISHALU))
+                                ch = (char) (rnd(26) + 'A');
+                            else
+                                ch = tp.t_disguise;
+                        }
+                    }
+
+                    if (on(player, ISBLIND) && (y != hero.y || x != hero.x))
+                        continue;
+
+                    move(y, x);
+
+                    if ((proom.r_flags & ISDARK) != 0 && !see_floor && ch == FLOOR)
+                        ch = ' ';
+
+                    if (tp != null || ch != CCHAR(inch()))
+                        addch(ch);
+
+                    if (door_stop && !firstmove && running)
+                    {
+                        switch (runKey.Key)
+                        {
+                            case ConsoleKey.H:
+                            case ConsoleKey.LeftArrow:
+                            case ConsoleKey.NumPad4:
+                                if (x == ex)
+                                    continue;
+                                break;
+
+                            case ConsoleKey.J:
+                            case ConsoleKey.DownArrow:
+                            case ConsoleKey.NumPad2:
+                                if (y == sy)
+                                    continue;
+                                break;
+
+                            case ConsoleKey.K:
+                            case ConsoleKey.UpArrow:
+                            case ConsoleKey.NumPad8:
+                                if (y == ey)
+                                    continue;
+                                break;
+
+                            case ConsoleKey.L:
+                            case ConsoleKey.RightArrow:
+                            case ConsoleKey.NumPad6:
+                                if (x == sx)
+                                    continue;
+                                break;
+
+                            case ConsoleKey.Y:
+                            case ConsoleKey.Home:
+                            case ConsoleKey.NumPad7:
+                                if (y + x - sumhero >= 1)
+                                    continue;
+                                break;
+
+                            case ConsoleKey.U:
+                            case ConsoleKey.PageUp:
+                            case ConsoleKey.NumPad9:
+                                if (y - x - diffhero >= 1)
+                                    continue;
+                                break;
+
+                            case ConsoleKey.N:
+                            case ConsoleKey.PageDown:
+                            case ConsoleKey.NumPad3:
+                                if (y + x - sumhero <= -1)
+                                    continue;
+                                break;
+
+                            case ConsoleKey.B:
+                            case ConsoleKey.End:
+                            case ConsoleKey.NumPad1:
+                                if (y - x - diffhero <= -1)
+                                    continue;
+                                break;
+                        }
+
+                        switch (ch)
+                        {
+                            case DOOR:
+                                if (x == hero.x || y == hero.y)
+                                    running = false;
+                                break;
+                            case PASSAGE:
+                                if (x == hero.x || y == hero.y)
+                                    passcount++;
+                                break;
+                            case FLOOR:
+                            case '|':
+                            case '-':
+                            case ' ':
+                                break;
+                            default:
+                                running = false;
+                                break;
+                        }
                     }
                 }
             }
@@ -217,6 +234,7 @@ internal partial class Program
     char trip_ch(int y, int x, char ch)
     {
         if (on(player, ISHALU) && after)
+        {
             switch (ch)
             {
                 case FLOOR:
@@ -232,6 +250,8 @@ internal partial class Program
                         ch = rnd_thing();
                     break;
             }
+        }
+
         return ch;
     }
 
@@ -504,7 +524,6 @@ internal partial class Program
                     msg(prompt);
                     gotit = false;
                 }
-
             } while (!gotit);
 
             last_dirKey = dirKey = dirKey.ToLower();

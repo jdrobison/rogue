@@ -1596,7 +1596,7 @@ internal partial class Program
     {
         list = null;
 
-        THING? t = null, previous = null, head = null;
+        THING? t = null, previous = null;
 
         if (read_error || format_error)
             return READSTAT;
@@ -1809,7 +1809,7 @@ internal partial class Program
 
         rs_write_stats(writer, max_stats);
         rs_write_rooms(writer, rooms);
-        rs_write_room_reference(writer, oldrp);
+        rs_write_room_reference(writer, oldroom);
         rs_write_rooms(writer, passages);
 
         rs_write_monsters(writer, monsters);
@@ -1937,7 +1937,7 @@ internal partial class Program
 
         rs_read_stats(reader, out max_stats);
         rs_read_rooms(reader, rooms);
-        rs_read_room_reference(reader, out oldrp);
+        rs_read_room_reference(reader, out oldroom);
         rs_read_rooms(reader, passages);
 
         rs_read_monsters(reader, monsters);

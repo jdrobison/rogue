@@ -185,7 +185,7 @@ over:
             {
                 bool symlink = is_symlink(file);
 
-                rs_read_string(reader, out var buf);
+                rs_read_string(reader, out string? buf);
                 if (buf != version)
                 {
                     Console.Write("Sorry, saved game is out of date.\n");
@@ -202,6 +202,7 @@ over:
                     Console.Write("Current screen only has {0} lines. Unable to restore game\n", LINES);
                     return (false);
                 }
+
                 if (cols > COLS)
                 {
                     endwin();

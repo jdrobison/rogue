@@ -18,7 +18,7 @@ namespace RogueSharp;
 
 internal partial class Program
 {
-    private readonly string?[] rip = 
+    private readonly string[] rip = 
     {
 "                       __________\n",
 "                      /          \\\n",
@@ -181,30 +181,30 @@ internal partial class Program
                 if (scp.sc_flags == 0 || scp.sc_flags == 3)
                     Console.Write(" by {0}", killname((char) scp.sc_monster, true));
 #if MASTER
-                //if (prflags == 1)
-                //{
-                //    printf(" (%s)", md_getrealname(scp.sc_uid));
-                //}
-                //else if (prflags == 2)
-                //{
-                //    fflush(stdout);
-                //    (void) fgets(prbuf, 10, stdin);
-                //    if (prbuf[0] == 'd')
-                //    {
-                //        int scoresToMove = top_ten.Length - scoreIndex - 1;
-                //        Array.Copy(top_ten, i, top_ten, i - 1, scoresToMove);
+                if (prflags == 1)
+                {
+                    //printf(" (%s)", md_getrealname(scp.sc_uid));
+                }
+                else if (prflags == 2)
+                {
+                    //fflush(stdout);
+                    //(void) fgets(prbuf, 10, stdin);
+                    //if (prbuf[0] == 'd')
+                    //{
+                    //    int scoresToMove = top_ten.Length - scoreIndex - 1;
+                    //    Array.Copy(top_ten, i, top_ten, i - 1, scoresToMove);
 
-                //        scoreIndex = endp - 1;
-                //        scoreIndex.sc_score = 0;
-                //        scoreIndex.sc_name = string.Empty;
-                //        scoreIndex.sc_flags = RN;
-                //        scoreIndex.sc_level = RN;
-                //        scoreIndex.sc_monster = (ushort) RN;
-                //        scp--;
-                //    }
-                //}
+                    //    scoreIndex = endp - 1;
+                    //    scoreIndex.sc_score = 0;
+                    //    scoreIndex.sc_name = string.Empty;
+                    //    scoreIndex.sc_flags = RN;
+                    //    scoreIndex.sc_level = RN;
+                    //    scoreIndex.sc_monster = (ushort) RN;
+                    //    scp--;
+                    //}
+                }
 
-                //else
+                else
 #endif
                     Console.Write(".");
 
@@ -247,23 +247,29 @@ internal partial class Program
         {
             mvprintw(LINES - 2, 0, "Killed by ");
             killer = killname(monst, false);
+            
             if (monst != 's' && monst != 'h')
                 printw("a%s ", vowelstr(killer));
+            
             printw("%s with %d gold", killer, purse);
         }
         else
         {
             DateTime now = DateTime.Now;
             move(8, 0);
+            
             foreach (string ripLine in rip)
             {
                 addstr(ripLine);
             }
+            
             mvaddstr(17, center(killer), killer);
+            
             if (monst == 's' || monst == 'h')
                 mvaddch(16, 32, ' ');
             else
                 mvaddstr(16, 33, vowelstr(killer));
+            
             mvaddstr(14, center(whoami), whoami);
             string s = $"{purse} Au";
             move(15, center(s));
@@ -271,6 +277,7 @@ internal partial class Program
 
             mvaddstr(18, 26, $"{now.Year,4}");
         }
+        
         move(LINES - 1, 0);
         refresh();
         score(purse, amulet ? 3 : 0, monst);
@@ -328,7 +335,7 @@ internal partial class Program
 
                 case WEAPON:
                     worth = weap_info[obj.o_which].oi_worth;
-                    worth *= 3 * (obj.o_hplus + obj.o_dplus) + obj.o_count;
+                    worth *= (3 * (obj.o_hplus + obj.o_dplus)) + obj.o_count;
                     obj.o_flags |= ISKNOW;
                     break;
 
@@ -360,6 +367,7 @@ internal partial class Program
                 case RING:
                     op = ring_info[obj.o_which];
                     worth = op.oi_worth;
+                    
                     if (obj.o_which == R_ADDSTR || obj.o_which == R_ADDDAM ||
                         obj.o_which == R_PROTECT || obj.o_which == R_ADDHIT)
                     {
@@ -368,8 +376,10 @@ internal partial class Program
                         else
                             worth = 10;
                     }
+                    
                     if ((obj.o_flags & ISKNOW) == 0)
                         worth /= 2;
+                    
                     obj.o_flags |= ISKNOW;
                     op.oi_know = true;
                     break;
@@ -378,8 +388,10 @@ internal partial class Program
                     op = ws_info[obj.o_which];
                     worth = op.oi_worth;
                     worth += 20 * obj.o_charges;
+                    
                     if ((obj.o_flags & ISKNOW) == 0)
                         worth /= 2;
+                    
                     obj.o_flags |= ISKNOW;
                     op.oi_know = true;
                     break;
@@ -395,6 +407,7 @@ internal partial class Program
             printw("%c) %5d  %s\n", obj.o_packch, worth, inv_name(obj, false));
             purse += worth;
         }
+
         printw("   %5d  Gold Pieces          ", oldpurse);
         refresh();
         score(purse, 2, ' ');

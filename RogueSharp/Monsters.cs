@@ -154,7 +154,7 @@ internal partial class Program
         tp.t_stats.s_arm = mp.m_stats.s_arm - lev_add;
         tp.t_stats.s_dmg = mp.m_stats.s_dmg;
         tp.t_stats.s_str = mp.m_stats.s_str;
-        tp.t_stats.s_exp = mp.m_stats.s_exp + lev_add* 10 + exp_add(tp);
+        tp.t_stats.s_exp = mp.m_stats.s_exp + (lev_add * 10) + exp_add(tp);
         tp.t_flags = mp.m_flags;
         if (level > 29)
             tp.t_flags |= ISHASTE;
@@ -195,12 +195,14 @@ internal partial class Program
         coord pos;
 
         tp = new_item();
+        
         do
         {
             find_floor(null, out pos, 0, true);
         } while (roomin(pos) == proom);
 
         new_monster(tp, randmonster(true), pos);
+        
         if (on(player, SEEMONST))
         {
             standout();
@@ -210,7 +212,9 @@ internal partial class Program
                 addch((char)(rnd(26) + 'A'));
             standend();
         }
+
         runto(tp.t_pos);
+
 #if MASTER
         if (wizard)
             msg("started a wandering %s", GetMonsterName(tp.t_type));
@@ -222,20 +226,20 @@ internal partial class Program
     /// </summary>
     THING wake_monster(int y, int x)
     {
-        THING tp;
+        THING? tp;
         room rp;
         char ch;
         string mname;
 
-#if MASTER
         if ((tp = moat(y, x)) == null)
-            msg("can't find monster in wake_monster");
-#else
-        tp = moat(y, x);
-        if (tp == null)
-            endwin(), abort();
-#endif
+        {
+            debug("can't find monster in wake_monster");
+            endwin();
+            Environment.Exit(1);
+        }
+
         ch = tp.t_type;
+
         /*
          * Every time he sees mean monster, it might start chasing him
          */
@@ -245,10 +249,12 @@ internal partial class Program
             tp.t_dest = hero;
             tp.t_flags |= ISRUN;
         }
+        
         if (ch == 'M' && !on(player, ISBLIND) && !on(player, ISHALU)
             && !on(tp, ISFOUND) && !on(tp, ISCANC) && on(tp, ISRUN))
         {
             rp = proom;
+        
             if ((rp != null && (rp.r_flags & ISDARK) == 0)
                 || dist(y, x, hero.y, hero.x) < LAMPDIST)
             {
@@ -268,6 +274,7 @@ internal partial class Program
                 }
             }
         }
+        
         /*
          * Let greedy ones guard gold
          */
@@ -279,6 +286,7 @@ internal partial class Program
             else
                 tp.t_dest = hero;
         }
+
         return tp;
     }
 
@@ -298,7 +306,7 @@ internal partial class Program
     {
         int need;
 
-        need = 14 + which - tp.t_stats.s_lvl / 2;
+        need = 14 + which - (tp.t_stats.s_lvl / 2);
         return (roll(1, 20) >= need);
     }
 
@@ -314,6 +322,7 @@ internal partial class Program
             if (ISRING(RIGHT, R_PROTECT))
                 which -= cur_ring[RIGHT]!.o_arm;
         }
+
         return save_throw(which, player);
     }
 }

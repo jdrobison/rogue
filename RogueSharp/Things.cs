@@ -247,10 +247,12 @@ internal partial class Program
                 cur.o_type = POTION;
                 cur.o_which = pick_one(pot_info);
                 break;
+
             case 1:
                 cur.o_type = SCROLL;
                 cur.o_which = pick_one(scr_info);
                 break;
+
             case 2:
                 cur.o_type = FOOD;
                 no_food = 0;
@@ -259,6 +261,7 @@ internal partial class Program
                 else
                     cur.o_which = 1;
                 break;
+
             case 3:
                 init_weapon(cur, pick_one(weap_info));
                 if ((r = rnd(100)) < 10)
@@ -269,6 +272,7 @@ internal partial class Program
                 else if (r < 15)
                     cur.o_hplus += rnd(3) + 1;
                 break;
+
             case 4:
                 cur.o_type = ARMOR;
                 cur.o_which = pick_one(arm_info);
@@ -281,6 +285,7 @@ internal partial class Program
                 else if (r < 28)
                     cur.o_arm -= rnd(3) + 1;
                 break;
+
             case 5:
                 cur.o_type = RING;
                 cur.o_which = pick_one(ring_info);
@@ -295,19 +300,23 @@ internal partial class Program
                             cur.o_arm = -1;
                             cur.o_flags |= ISCURSED;
                         }
+
                         break;
                     case R_AGGR:
                     case R_TELEPORT:
                         cur.o_flags |= ISCURSED;
                         break;
                 }
+
                 break;
+
             case 6:
                 cur.o_type = STICK;
                 cur.o_which = pick_one(ws_info);
                 fix_stick(cur);
-#if MASTER
                 break;
+
+#if MASTER
             default:
                 debug("Picked a bad kind of object");
                 wait_for(' ');
@@ -410,7 +419,7 @@ internal partial class Program
     /// </summary>
     void print_disc(char type)
     {
-        int MAX4(int a,int b,int c,int d) => Math.Max(Math.Max(a,b), Math.Max(c,d));
+        static int MAX4(int a,int b,int c,int d) => Math.Max(Math.Max(a,b), Math.Max(c,d));
 
         obj_info[] info;
         int i, maxnum, num_found;
@@ -518,14 +527,17 @@ internal partial class Program
                     refresh();
                     CursesWindow tw = newwin(_things_line_cnt + 1, _add_line_maxlen + 2, 0, COLS - _add_line_maxlen - 3);
                     CursesWindow sw = subwin(tw, _things_line_cnt + 1, _add_line_maxlen + 1, 0, COLS - _add_line_maxlen - 2);
+                    
                     for (int y = 0; y <= _things_line_cnt; y++)
                     {
                         wmove(sw, y, 0);
                         for (int x = 0; x <= _add_line_maxlen; x++)
                             waddch(sw, mvwinch(hw, y, x));
                     }
+                    
                     wmove(tw, _things_line_cnt, 1);
                     waddstr(tw, prompt);
+                    
                     /*
                      * if there are lines below, use 'em
                      */
@@ -536,15 +548,18 @@ internal partial class Program
                         else
                             mvwin(tw, NUMLINES, 0);
                     }
+                
                     touchwin(tw);
                     wrefresh(tw);
                     wait_for(' ');
+                    
                     //if (md_hasclreol())
                     {
                         werase(tw);
                         leaveok(tw, true);
                         wrefresh(tw);
                     }
+                    
                     delwin(tw);
                     touchwin(stdscr);
                 }
@@ -558,16 +573,20 @@ internal partial class Program
                     wclear(hw);
                     touchwin(stdscr);
                 }
+                
                 _things_newpage = true;
                 _things_line_cnt = 0;
                 _add_line_maxlen = prompt.Length;
             }
+
             if (fmt != null && !(_things_line_cnt == 0 && fmt == string.Empty))
             {
-                mvwprintw(hw, _things_line_cnt++, 0, fmt, arg);
+                mvwprintw(hw, _things_line_cnt++, 0, fmt, arg ?? string.Empty);
                 getyx(hw, out int y, out int x);
+
                 if (_add_line_maxlen < x)
                     _add_line_maxlen = x;
+
                 _things_lastfmt = fmt;
                 _things_lastarg = arg;
             }

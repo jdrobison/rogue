@@ -15,7 +15,6 @@ internal partial class Program
 
     void new_level()
     {
-        string sp;
         int i;
 
         player.t_flags &= ~ISHELD;  /* unhold when you go down just in case */
@@ -190,10 +189,9 @@ internal partial class Program
         int spots, num_monst;
 
         rp = rooms[rnd_room()];
-        spots = (rp.r_max.y - 2) * (rp.r_max.x - 2) - MINTREAS;
-        if (spots > (MAXTREAS - MINTREAS))
-            spots = (MAXTREAS - MINTREAS);
+        spots = Math.Min(((rp.r_max.y - 2) * (rp.r_max.x - 2)) - MINTREAS, MAXTREAS - MINTREAS);
         num_monst = nm = rnd(spots) + MINTREAS;
+        
         while (nm-- != 0)
         {
             find_floor(rp, out _treas_room_mp, 2 * MAXTRIES, false);
@@ -213,9 +211,11 @@ internal partial class Program
         if (nm > spots)
             nm = spots;
         level++;
+        
         while (nm-- != 0)
         {
             spots = 0;
+        
             if (find_floor(rp, out _treas_room_mp, MAXTRIES, true))
             {
                 tp = new_item();
@@ -224,6 +224,7 @@ internal partial class Program
                 give_pack(tp);
             }
         }
+
         level--;
     }
 }

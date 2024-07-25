@@ -83,6 +83,7 @@ internal partial class Program
          * Let him know it was really a xeroc (if it was one).
          */
         ch = '\0';
+        
         if (tp.t_type == 'X' && tp.t_disguise != 'X' && !on(player, ISBLIND))
         {
             tp.t_disguise = 'X';
@@ -91,14 +92,17 @@ internal partial class Program
                 ch = (char) (rnd(26) + 'A');
                 mvaddch(tp.t_pos.y, tp.t_pos.x, ch);
             }
+
             msg(choose_str("heavy!  That's a nasty critter!",
                        "wait!  That's a xeroc!"));
             if (!thrown)
                 return false;
         }
+
         mname = set_mname(tp);
         did_hit = false;
         has_hit = (terse && !to_death);
+        
         if (roll_em(player, tp, weap, thrown))
         {
             did_hit = false;
@@ -106,6 +110,7 @@ internal partial class Program
                 thunk(weap, mname, terse);
             else
                 hit(null, mname, terse);
+        
             if (on(player, CANHUH))
             {
                 did_hit = true;
@@ -115,12 +120,14 @@ internal partial class Program
                 has_hit = false;
                 msg("your hands stop glowing %s", pick_color("red"));
             }
+
             if (tp.t_stats.s_hpt <= 0)
                 killed(tp, true);
             else if (did_hit && !on(player, ISBLIND))
                 msg("%s appears confused", mname);
             did_hit = true;
         }
+
         else if (thrown)
             bounce(weap, mname, terse);
         else
@@ -144,17 +151,20 @@ internal partial class Program
         running = false;
         count = 0;
         quiet = 0;
+        
         if (to_death && !on(mp, ISTARGET))
         {
             to_death = false;
             kamikaze = false;
         }
+
         if (mp.t_type == 'X' && mp.t_disguise != 'X' && !on(player, ISBLIND))
         {
             mp.t_disguise = 'X';
             if (on(player, ISHALU))
                 mvaddch(mp.t_pos.y, mp.t_pos.x, (char) (rnd(26) + 'A'));
         }
+
         mname = set_mname(mp);
         oldhp = pstats.s_hpt;
 
@@ -210,6 +220,7 @@ internal partial class Program
                                 addmsg(" by the %s", mname);
                             endmsg();
                         }
+        
                         no_command += rnd(2) + 2;
                         if (no_command > BORE_LEVEL)
                             death('h');
@@ -237,6 +248,7 @@ internal partial class Program
                                     msg("bite has no effect");
                             }
                         }
+                        
                         break;
 
                     case 'W':
@@ -272,6 +284,7 @@ internal partial class Program
                                 death(mp.t_type);
                             msg("you suddenly feel weaker");
                         }
+                        
                         break;
 
                     case 'F':
@@ -349,17 +362,20 @@ internal partial class Program
                 addmsg(".  ");
                 has_hit = false;
             }
+            
             if (mp.t_type == 'F')
             {
                 pstats.s_hpt -= vf_hit;
                 if (pstats.s_hpt <= 0)
                     death(mp.t_type);  /* Bye bye life ... */
             }
+            
             miss(mname, null, false);
         }
 
         if (fight_flush && !to_death)
             flush_type();
+        
         count = 0;
         status();
 
@@ -402,7 +418,7 @@ internal partial class Program
     bool swing(int at_lvl, int op_arm, int wplus)
     {
         int res = rnd(20);
-        int need = (20 - at_lvl) - op_arm;
+        int need = 20 - at_lvl - op_arm;
 
         return (res + wplus >= need);
     }
@@ -431,6 +447,7 @@ internal partial class Program
         {
             hplus = (weap == null ? 0 : weap.o_hplus);
             dplus = (weap == null ? 0 : weap.o_dplus);
+            
             if (weap == cur_weapon)
             {
                 if (ISRING(LEFT, R_ADDDAM))
@@ -442,20 +459,25 @@ internal partial class Program
                 else if (ISRING(RIGHT, R_ADDHIT))
                     hplus += cur_ring[RIGHT]!.o_arm;
             }
-            damageDescription = weap.o_damage;
-            if (hurl)
+            
+            damageDescription = weap?.o_damage;
+            
+            if (hurl && weap != null)
             {
                 if (((weap.o_flags & ISMISL) != 0) && cur_weapon != null &&
-                  cur_weapon.o_which == weap.o_launch)
+                    cur_weapon.o_which == weap.o_launch)
                 {
                     damageDescription = weap.o_hurldmg;
                     hplus += cur_weapon.o_hplus;
                     dplus += cur_weapon.o_dplus;
                 }
                 else if (weap.o_launch < 0)
+                {
                     damageDescription = weap.o_hurldmg;
+                }
             }
         }
+        
         /*
          * If the creature being attacked is not running (alseep or held)
          * then the attacker gets a plus four bonus to hit.
@@ -463,6 +485,7 @@ internal partial class Program
         if (!on(thdef, ISRUN))
             hplus += 4;
         def_arm = def.s_arm;
+        
         if (thdef == player)
         {
             if (cur_armor != null)
@@ -554,15 +577,19 @@ internal partial class Program
     /// <summary>
     /// Print a message to indicate a succesful hit
     /// </summary>
-    void hit(string er, string? ee, bool noend)
+    void hit(string? er, string? ee, bool noend)
     {
         string s;
 
         if (to_death)
             return;
+        
         addmsg(prname(er, true));
+        
         if (terse)
+        {
             s = " hit";
+        }
         else
         {
             int i = rnd(4);
@@ -570,6 +597,7 @@ internal partial class Program
                 i += 4;
             s = h_names[i];
         }
+
         addmsg(s);
         if (!terse)
             addmsg(prname(ee, false));
@@ -633,9 +661,11 @@ internal partial class Program
             else
                 discard(obj);
         }
+        
         set_moat(mp.y, mp.x, null);
         mvaddch(mp.y, mp.x, tp.t_oldch);
         detach(ref mlist, tp);
+        
         if (on(tp, ISTARGET))
         {
             kamikaze = false;
@@ -643,6 +673,7 @@ internal partial class Program
             if (fight_flush)
                 flush_type();
         }
+        
         discard(tp);
     }
 
@@ -670,20 +701,25 @@ internal partial class Program
                     THING gold = new_item();
                     gold.o_type = GOLD;
                     gold.o_goldval = GOLDCALC;
+                    
                     if (save(VS_MAGIC))
                     {
                         // GOLDCALC returns a random value, so don't replace this with 4 * GOLDCALC
                         gold.o_goldval += GOLDCALC + GOLDCALC + GOLDCALC + GOLDCALC;
                     }
+                    
                     attach(ref tp.t_pack, gold);
                 }
+                
                 break;
         }
+        
         /*
          * Get rid of the monster.
          */
         string mname = set_mname(tp);
         remove_mon(tp.t_pos, tp, true);
+        
         if (pr)
         {
             if (has_hit)
@@ -697,8 +733,10 @@ internal partial class Program
                     addmsg("you have ");
                 addmsg("defeated ");
             }
+        
             msg(mname);
         }
+        
         /*
          * Do adjustments if he went up a level
          */

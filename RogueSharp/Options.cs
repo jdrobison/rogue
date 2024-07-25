@@ -223,6 +223,7 @@ internal partial class Program
         op_bad = true;
         getyx(win, out int oy, out int ox);
         waddstr(win, value.ToString());
+        
         while (op_bad)
         {
             wmove(win, oy, ox);
@@ -251,6 +252,7 @@ internal partial class Program
                     break;
             }
         }
+
         wmove(win, oy, ox);
         waddstr(win, value.ToString());
         waddch(win, '\n');
@@ -267,7 +269,10 @@ internal partial class Program
 
         was_sf = see_floor;
         retval = get_bool(ref see_floor, win);
-        if (retval == QUIT) return (QUIT);
+        
+        if (retval == QUIT) 
+            return (QUIT);
+        
         if (was_sf != see_floor)
         {
             if (!see_floor)
@@ -279,6 +284,7 @@ internal partial class Program
             else
                 look(false);
         }
+
         return (NORM);
     }
 
@@ -289,13 +295,10 @@ internal partial class Program
     /// </summary>
     int get_str(out string value, WINDOW win)
     {
-        int oy, ox;
-        int i;
         char c;
-        string buf;
         StringBuilder builder = new StringBuilder(80);
 
-        getyx(win, out oy, out ox);
+        getyx(win, out int oy, out int ox);
         wrefresh(win);
         
         /*
@@ -304,7 +307,9 @@ internal partial class Program
         for (; (c = readchar().KeyChar) != '\n' && c != '\r' && c != ESCAPE; wclrtoeol(win), wrefresh(win))
         {
             if (c == -1)
+            {
                 continue;
+            }
             else if (c == erasechar())  /* process erase character */
             {
                 if (builder.Length > 0)
@@ -312,6 +317,7 @@ internal partial class Program
                     builder.Length--;
                     waddch(win, (char) ConsoleKey.Backspace);
                 }
+
                 continue;
             }
             else if (c == killchar())   /* process kill character */
@@ -332,6 +338,7 @@ internal partial class Program
                     continue;
                 }
             }
+
             if (char.IsAscii(c) && (c != ' '))
             {
                 builder.Append(c);
@@ -367,10 +374,12 @@ internal partial class Program
         op_bad = true;
         getyx(win, out oy, out ox);
         waddstr(win, inv_t_name[value]);
+        
         while (op_bad)
         {
             wmove(win, oy, ox);
             wrefresh(win);
+        
             switch (readchar().Key)
             {
                 case ConsoleKey.O:
@@ -399,10 +408,10 @@ internal partial class Program
                     break;
             }
         }
+
         mvwprintw(win, oy, ox, "%s\n", inv_t_name[value]);
         return NORM;
     }
-
 
 #if MASTER
     /// <summary>
@@ -477,8 +486,10 @@ internal partial class Program
                         else
                             op.o_setfunc(subparts[1]);
                     }
+
                     break;
                 }
+
                 /*
                  * check for "noname" for booleans
                  */

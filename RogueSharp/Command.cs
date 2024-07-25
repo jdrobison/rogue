@@ -233,7 +233,8 @@ over:
                             goto over;
 
                         case ConsoleKey.P:
-                            after = false; msg(huh);
+                            after = false;
+                            msg(huh);
                             break;
 
                         case ConsoleKey.R:

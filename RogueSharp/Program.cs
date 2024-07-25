@@ -11,7 +11,7 @@ namespace RogueSharp;
 
 internal partial class Program
 {
-    public static Program Instance { get; private set; }
+    public static Program Instance { get; private set; } = null!;
 
     private static void Main(string[] args)
     {
@@ -166,6 +166,7 @@ internal partial class Program
     /// <summary>
     /// Exit the program abnormally.
     /// </summary>
+    [DoesNotReturn]
     void endit(int _)
     {
         fatal("Okay, bye bye!\n");
@@ -174,6 +175,7 @@ internal partial class Program
     /// <summary>
     /// Exit the program, printing a message.
     /// </summary>
+    [DoesNotReturn]
     void fatal(string s)
     {
         mvaddstr(LINES - 2, 0, s);
@@ -271,7 +273,7 @@ internal partial class Program
             inv_type = INV_CLEAR;
 
         oldpos = hero;
-        oldrp = roomin(hero) ?? new room();
+        oldroom = roomin(hero) ?? rooms[0];
 
         while (playing)
             command();          /* Command execution */
@@ -375,6 +377,7 @@ internal partial class Program
     /// <summary>
     /// Leave the process properly
     /// </summary>
+    [DoesNotReturn]
     void my_exit(int st)
     {
         //resetltchars();
