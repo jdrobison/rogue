@@ -1,6 +1,10 @@
-﻿using RogueSharp.Helpers;
+﻿using System.Diagnostics;
+
+using RogueSharp.Helpers;
 
 using static RogueSharp.Helpers.CursesHelper;
+
+using str_t = System.UInt32;
 
 namespace RogueSharp;
 
@@ -9,18 +13,18 @@ internal partial class Program
     private int MAXMSG => NUMCOLS - "--More--".Length;
     private int msgbufLength => (2 * MAXMSG) + 1;
 
-    static string msgbuf; 
+    static string msgbuf;
     static int newpos = 0;
 
     /// <summary>
     /// Display a message at the top of the screen.
     /// </summary>
-    int msg(string fmt, params object[] args)
+    int msg(string? fmt, params object?[] args)
     {
         /*
          * if the string is "", just clear the line
          */
-        if (fmt.Length == 0)
+        if (fmt == null || fmt.Length == 0)
         {
             move(0, 0);
             clrtoeol();
@@ -38,7 +42,7 @@ internal partial class Program
     /// <summary>
     /// Add things to the current message
     /// </summary>
-    void addmsg(string fmt, params object[] args)
+    void addmsg(string fmt, params object?[] args)
     {
         doadd(fmt, args);
     }
@@ -99,7 +103,7 @@ internal partial class Program
     /// <summary>
     /// Perform an add onto the message buffer
     /// </summary>
-    void doadd(string fmt, params object[] args)
+    void doadd(string fmt, params object?[] args)
     {
         string converted = PrintfHelper.ConvertFormatString(fmt);
         string addendum = string.Format(converted, args);
@@ -150,83 +154,90 @@ internal partial class Program
 #endif
     }
 
-#if false
-    /*
-     * status:
-     *	Display the important stats line.  Keep the cursor where it was.
-     */
-    void
-    status()
+    private int _status_hpwidth = 0;
+    private int _status_s_hungry = 0;
+    private int _status_s_lvl = 0;
+    private int _status_s_pur = -1;
+    private int _status_s_hpt = 0;
+    private int _status_s_arm = 0;
+    private str_t _status_s_str = 0;
+    private int _status_s_exp = 0;
+
+    /// <summary>
+    /// Display the important stats line.  Keep the cursor where it was.
+    /// </summary>
+    void status()
     {
-        register int oy, ox, temp;
-        static int hpwidth = 0;
-        static int s_hungry = 0;
-        static int s_lvl = 0;
-        static int s_pur = -1;
-        static int s_hp = 0;
-        static int s_arm = 0;
-        static str_t s_str = 0;
-        static int s_exp = 0;
-        static char *state_name[] =
-    {
-    "", "Hungry", "Weak", "Faint"
-    };
+        string[] hungry_state_name = { "", "Hungry", "Weak", "Faint" };
+
+        if (Debugger.IsAttached)
+            Debugger.Break();
 
         /*
          * If nothing has changed since the last status, don't
          * bother.
          */
-        temp = (cur_armor != NULL ? cur_armor->o_arm : pstats.s_arm);
-        if (s_hp == pstats.s_hpt && s_exp == pstats.s_exp && s_pur == purse
-        && s_arm == temp && s_str == pstats.s_str && s_lvl == level
-        && s_hungry == hungry_state
-        && !stat_msg
-        )
-            return;
-
-        s_arm = temp;
-
-        getyx(stdscr, oy, ox);
-        if (s_hp != max_hp)
+        int armor = cur_armor?.o_arm ?? pstats.s_arm;
+        if (_status_s_hpt == pstats.s_hpt && 
+            _status_s_exp == pstats.s_exp && 
+            _status_s_pur == purse && 
+            _status_s_arm == armor && 
+            _status_s_str == pstats.s_str && 
+            _status_s_lvl == level && 
+            _status_s_hungry == hungry_state && 
+            !stat_msg)
         {
-            temp = max_hp;
-            s_hp = max_hp;
-            for (hpwidth = 0; temp; hpwidth++)
-                temp /= 10;
+            return;
+        }
+
+        _status_s_arm = armor;
+
+        getyx(stdscr, out int oy, out int ox);
+        if (_status_s_hpt != max_hp)
+        {
+            int hp = max_hp;
+            _status_s_hpt = max_hp;
+            for (_status_hpwidth = 0; hp != 0; _status_hpwidth++)
+                hp /= 10;
         }
 
         /*
          * Save current status
          */
-        s_lvl = level;
-        s_pur = purse;
-        s_hp = pstats.s_hpt;
-        s_str = pstats.s_str;
-        s_exp = pstats.s_exp;
-        s_hungry = hungry_state;
+        _status_s_lvl = level;
+        _status_s_pur = purse;
+        _status_s_hpt = pstats.s_hpt;
+        _status_s_str = pstats.s_str;
+        _status_s_exp = pstats.s_exp;
+        _status_s_hungry = hungry_state;
+
+        string message = string.Format(
+            "Level: {0}  Gold: {1,-5}  Hp: {2}({3})  Str: {4}({5})  Arm: {6}  Exp: {7}/{8}  {9}",
+            level,
+            purse,
+            pstats.s_hpt,
+            max_hp,
+            pstats.s_str,
+            max_stats.s_str,
+            10 - _status_s_arm,
+            pstats.s_lvl,
+            pstats.s_exp,
+            hungry_state_name[hungry_state]);
 
         if (stat_msg)
         {
             move(0, 0);
-            msg("Level: %d  Gold: %-5d  Hp: %*d(%*d)  Str: %2d(%d)  Arm: %-2d  Exp: %d/%ld  %s",
-            level, purse, hpwidth, pstats.s_hpt, hpwidth, max_hp, pstats.s_str,
-            max_stats.s_str, 10 - s_arm, pstats.s_lvl, pstats.s_exp,
-            state_name[hungry_state]);
+            msg(message);
         }
         else
         {
             move(STATLINE, 0);
-
-            printw("Level: %d  Gold: %-5d  Hp: %*d(%*d)  Str: %2d(%d)  Arm: %-2d  Exp: %d/%d  %s",
-            level, purse, hpwidth, pstats.s_hpt, hpwidth, max_hp, pstats.s_str,
-            max_stats.s_str, 10 - s_arm, pstats.s_lvl, pstats.s_exp,
-            state_name[hungry_state]);
+            printw(message);
         }
 
         clrtoeol();
         move(oy, ox);
     }
-#endif
 
     /// <summary>
     /// Sit around until the guy types the right key
@@ -247,25 +258,20 @@ internal partial class Program
         }
     }
 
-#if false
-    /*
-     * show_win:
-     *	Function used to display a window and wait before returning
-     */
-    void
-    show_win(char* message)
+    /// <summary>
+    /// Function used to display a window and wait before returning
+    /// </summary>
+    void show_win(string message)
     {
-        WINDOW *win;
+        CursesWindow win = hw;
 
-        win = hw;
         wmove(win, 0, 0);
         waddstr(win, message);
         touchwin(win);
         wmove(win, hero.y, hero.x);
         wrefresh(win);
         wait_for(' ');
-        clearok(curscr, TRUE);
+        clearok(curscr, true);
         touchwin(stdscr);
     }
-#endif
 }

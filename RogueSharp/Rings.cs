@@ -1,27 +1,24 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.NetworkInformation;
-using System.Text;
-using System.Threading.Tasks;
-
-using RogueSharp.Things;
-
-using static System.Formats.Asn1.AsnWriter;
-
+﻿/*
+ * Routines dealing specifically with rings
+ *
+ * @(#)rings.c	4.19 (Berkeley) 05/29/83
+ *
+ * Rogue: Exploring the Dungeons of Doom
+ * Copyright (C) 1980-1983, 1985, 1999 Michael Toy, Ken Arnold and Glenn Wichman
+ * All rights reserved.
+ *
+ * See the file LICENSE.TXT for full copyright and licensing information.
+ */
 namespace RogueSharp;
 
 internal partial class Program
 {
-#if false
-    /*
-     * ring_on:
-     *    Put a ring on a hand
-     */
-
+    /// <summary>
+    /// Put a ring on a hand
+    /// </summary>
     void ring_on()
     {
-        THING obj;
+        THING? obj;
         int ring;
 
         obj = get_item("put on", RING);
@@ -62,6 +59,7 @@ internal partial class Program
                 msg("wearing two");
             return;
         }
+
         cur_ring[ring] = obj;
 
         /*
@@ -85,16 +83,13 @@ internal partial class Program
         msg("%s (%c)", inv_name(obj, true), obj.o_packch);
     }
 
-    /*
-     * ring_off:
-     *    take off a ring
-     */
-
-    void
-    ring_off()
+    /// <summary>
+    /// take off a ring
+    /// </summary>
+    void ring_off()
     {
         int ring;
-        THING *obj;
+        THING? obj;
 
         if (cur_ring[LEFT] == null && cur_ring[RIGHT] == null)
         {
@@ -108,9 +103,9 @@ internal partial class Program
             ring = RIGHT;
         else if (cur_ring[RIGHT] == null)
             ring = LEFT;
-        else
-        if ((ring = gethand()) < 0)
+        else if ((ring = gethand()) < 0)
             return;
+
         mpos = 0;
         obj = cur_ring[ring];
         if (obj == null)
@@ -118,16 +113,15 @@ internal partial class Program
             msg("not wearing such a ring");
             return;
         }
+        
         if (dropcheck(obj))
             msg("was wearing %s(%c)", inv_name(obj, true), obj.o_packch);
     }
 
-    /*
-     * gethand:
-     *    Which hand is the hero interested in?
-     */
-    int
-    gethand()
+    /// <summary>
+    /// Which hand is the hero interested in?
+    /// </summary>
+    int gethand()
     {
         int c;
 
@@ -137,13 +131,16 @@ internal partial class Program
                 msg("left or right ring? ");
             else
                 msg("left hand or right hand? ");
-            if ((c = readchar()) == ESCAPE)
+            if ((c = readchar().KeyChar) == ESCAPE)
                 return -1;
+
             mpos = 0;
+
             if (c == 'l' || c == 'L')
                 return LEFT;
             else if (c == 'r' || c == 'R')
                 return RIGHT;
+
             if (terse)
                 msg("L or R");
             else
@@ -151,34 +148,42 @@ internal partial class Program
         }
     }
 
-    /*
-     * ring_eat:
-     *    How much food does this ring use up?
-     */
-    int
-    ring_eat(int hand)
+    private readonly int[] _ring_eat_uses = 
     {
-        THING *ring;
-        int eat;
-        static int uses[] = {
-     1,    /* R_PROTECT */         1,    /* R_ADDSTR */
-     1,    /* R_SUSTSTR */        -3,    /* R_SEARCH */
-    -5,    /* R_SEEINVIS */     0,    /* R_NOP */
-     0,    /* R_AGGR */        -3,    /* R_ADDHIT */
-    -3,    /* R_ADDDAM */         2,    /* R_REGEN */
-    -2,    /* R_DIGEST */         0,    /* R_TELEPORT */
-     1,    /* R_STEALTH */         1    /* R_SUSTARM */
+         1,     // R_PROTECT
+         1,     // R_ADDSTR
+         1,     // R_SUSTSTR
+        -3,     // R_SEARCH
+        -5,     // R_SEEINVIS
+         0,     // R_NOP
+         0,     // R_AGGR
+        -3,     // R_ADDHIT
+        -3,     // R_ADDDAM
+         2,     // R_REGEN
+        -2,     // R_DIGEST
+         0,     // R_TELEPORT
+         1,     // R_STEALTH
+         1      // R_SUSTARM
     };
 
-        if ((ring = cur_ring[hand]) == null)
+    /// <summary>
+    /// How much food does this ring use up?
+    /// </summary>
+    int ring_eat(int hand)
+    {
+        THING? ring = cur_ring[hand];
+        if (ring is null)
             return 0;
-        if ((eat = uses[ring.o_which]) < 0)
-            eat = (rnd(-eat) == 0);
+
+        int eat = _ring_eat_uses[ring.o_which];
+
+        if (eat < 0)
+            eat = Convert.ToInt32(rnd(-eat) == 0);
         if (ring.o_which == R_DIGEST)
             eat = -eat;
+
         return eat;
     }
-#endif
 
     /// <summary>
     /// Print ring bonuses

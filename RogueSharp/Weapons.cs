@@ -1,14 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics.Metrics;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Text;
 
-using RogueSharp.Things;
-
-using Windows.Win32.System.Console;
+using static RogueSharp.Helpers.CursesHelper;
 
 namespace RogueSharp;
 
@@ -47,132 +39,114 @@ internal partial class Program
         new( "2x3", "1x6",  NO_WEAPON,  ISMISL          ),  /* Spear */
     };
 
-#if false
-/*
- * missile:
- *.Fire a missile in a given direction
- */
-
-void
-missile(int ydelta, int xdelta)
-{
-    THING obj;
-
-    /*
-     * Get which thing we are hurling
-     */
-    if ((obj = get_item("throw", WEAPON)) == null)
-        return;
-    if (!dropcheck(obj) || is_current(obj))
-        return;
-    obj = leave_pack(obj, true, false);
-    do_motion(obj, ydelta, xdelta);
-    /*
-     * AHA! Here it has hit something.  If it is a wall or a door,
-     * or if it misses (combat) the monster, put it on the floor
-     */
-    if (moat(obj.o_pos.y, obj.o_pos.x) == null ||
-    !hit_monster(unc(obj.o_pos), obj))
-        fall(obj, true);
-}
-
-/*
- * do_motion:
- *.Do the actual motion on the screen done by an object traveling
- *.across the room
- */
-
-void
-do_motion(THING* obj, int ydelta, int xdelta)
-{
-    int ch;
-
-    /*
-     * Come fly with us ...
-     */
-    obj.o_pos = hero;
-    for (; ; )
+    /// <summary>
+    /// Fire a missile in a given direction
+    /// </summary>
+    void missile(int dy, int dx)
     {
+        THING? obj;
+
         /*
-         * Erase the old one
+         * Get which thing we are hurling
          */
-        if (!ce(obj.o_pos, hero) && cansee(unc(obj.o_pos)) && !terse)
-        {
-            ch = chat(obj.o_pos.y, obj.o_pos.x);
-            if (ch == FLOOR && !show_floor())
-                ch = ' ';
-            mvaddch(obj.o_pos.y, obj.o_pos.x, ch);
-        }
+        if ((obj = get_item("throw", WEAPON)) == null)
+            return;
+        if (!dropcheck(obj) || is_current(obj))
+            return;
+        obj = leave_pack(obj, true, false);
+        do_motion(obj, dy, dx);
+
         /*
-         * Get the new position
+         * AHA! Here it has hit something.  If it is a wall or a door,
+         * or if it misses (combat) the monster, put it on the floor
          */
-        obj.o_pos.y += ydelta;
-        obj.o_pos.x += xdelta;
-        if (step_ok(ch = winat(obj.o_pos.y, obj.o_pos.x)) && ch != DOOR)
+        if (moat(obj.o_pos.y, obj.o_pos.x) == null || !hit_monster(obj.o_pos.y, obj.o_pos.x, obj))
+            fall(obj, true);
+    }
+
+    /// <summary>
+    /// Do the actual motion on the screen done by an object traveling across the room
+    /// </summary>
+
+    void do_motion(THING obj, int ydelta, int xdelta)
+    {
+        char ch;
+
+        /*
+         * Come fly with us ...
+         */
+        obj.o_pos = hero;
+        for (; ; )
         {
             /*
-             * It hasn't hit anything yet, so display it
-             * If it alright.
+             * Erase the old one
              */
-            if (cansee(unc(obj.o_pos)) && !terse)
+            if (!ce(obj.o_pos, hero) && cansee(obj.o_pos.y, obj.o_pos.x) && !terse)
             {
-                mvaddch(obj.o_pos.y, obj.o_pos.x, obj.o_type);
-                refresh();
+                ch = chat(obj.o_pos.y, obj.o_pos.x);
+                if (ch == FLOOR && !show_floor())
+                    ch = ' ';
+                mvaddch(obj.o_pos.y, obj.o_pos.x, ch);
             }
-            continue;
+
+            /*
+             * Get the new position
+             */
+            obj.o_pos.y += ydelta;
+            obj.o_pos.x += xdelta;
+            if (step_ok(ch = winat(obj.o_pos.y, obj.o_pos.x)) && ch != DOOR)
+            {
+                /*
+                 * It hasn't hit anything yet, so display it
+                 * If it alright.
+                 */
+                if (cansee(obj.o_pos.y, obj.o_pos.x) && !terse)
+                {
+                    mvaddch(obj.o_pos.y, obj.o_pos.x, (char) obj.o_type);
+                    refresh();
+                }
+                continue;
+            }
+            break;
         }
-        break;
     }
-}
 
-/*
- * fall:
- *.Drop an item someplace around here.
- */
-
-void
-fall(THING* obj, bool pr)
-{
-    PLACE *pp;
-    static coord fpos;
-
-    if (fallpos(&obj.o_pos, &fpos))
+    /// <summary>
+    /// Drop an item someplace around here.
+    /// </summary>
+    void fall(THING obj, bool pr)
     {
-        pp = INDEX(fpos.y, fpos.x);
-        pp.p_ch = (char) obj.o_type;
-        obj.o_pos = fpos;
-        if (cansee(fpos.y, fpos.x))
+        if (fallpos(obj.o_pos, out coord fpos))
         {
-            if (pp.p_monst != null)
-                pp.p_monst.t_oldch = (char) obj.o_type;
-            else
-                mvaddch(fpos.y, fpos.x, obj.o_type);
+            PLACE place = INDEX(fpos.y, fpos.x);
+            place.p_ch = (char) obj.o_type;
+            obj.o_pos = fpos;
+            if (cansee(fpos.y, fpos.x))
+            {
+                if (place.p_monst != null)
+                    place.p_monst.t_oldch = (char) obj.o_type;
+                else
+                    mvaddch(fpos.y, fpos.x, (char) obj.o_type);
+            }
+            attach(ref lvl_obj, obj);
+            return;
         }
-        attach(lvl_obj, obj);
-        return;
-    }
-    if (pr)
-    {
-        if (has_hit)
+        if (pr)
         {
-            endmsg();
-            has_hit = false;
+            if (has_hit)
+            {
+                endmsg();
+                has_hit = false;
+            }
+            msg("the %s vanishes as it hits the ground",
+                weap_info[obj.o_which].oi_name);
         }
-        msg("the %s vanishes as it hits the ground",
-            weap_info[obj.o_which].oi_name);
+        discard(obj);
     }
-    discard(obj);
-}
-#endif
 
-    /*
-     * init_weapon:
-     */
     /// <summary>
     /// Set up the initial goodies for a weapon
     /// </summary>
-    /// <param name="weap"></param>
-    /// <param name="which"></param>
     void init_weapon(THING weap, int which)
     {
         init_weaps iwp = init_dam[which];
@@ -203,21 +177,17 @@ fall(THING* obj, bool pr)
         }
     }
 
-#if false
-/*
- * hit_monster:
- *.Does the missile hit the monster?
- */
-int
-hit_monster(int y, int x, THING* obj)
-{
-    static coord mp;
+    /// <summary>
+    /// Does the missile hit the monster?
+    /// </summary>
+    bool hit_monster(int y, int x, THING obj)
+    {
+        coord mp;
 
-    mp.y = y;
-    mp.x = x;
-    return fight(&mp, obj, true);
-}
-#endif
+        mp.y = y;
+        mp.x = x;
+        return fight(mp, obj, true);
+    }
 
     /// <summary>
     /// Figure out the plus number for armor/weapons
@@ -233,75 +203,77 @@ hit_monster(int y, int x, THING* obj)
         return builder.ToString();
     }
 
-#if false
-/*
- * wield:
- *.Pull out a certain weapon
- */
-
-void
-wield()
-{
-    THING obj, *oweapon;
-    char *sp;
-
-    oweapon = cur_weapon;
-    if (!dropcheck(cur_weapon))
+    /// <summary>
+    /// Pull out a certain weapon
+    /// </summary>
+    void wield()
     {
-        cur_weapon = oweapon;
-        return;
-    }
-    cur_weapon = oweapon;
-    if ((obj = get_item("wield", WEAPON)) == null)
-    {
-bad:
-        after = false;
-        return;
-    }
+        THING? obj, oweapon;
+        string sp;
 
-    if (obj.o_type == ARMOR)
-    {
-        msg("you can't wield armor");
-        goto bad;
-    }
-    if (is_current(obj))
-        goto bad;
-
-    sp = inv_name(obj, true);
-    cur_weapon = obj;
-    if (!terse)
-        addmsg("you are now ");
-    msg("wielding %s (%c)", sp, obj.o_packch);
-}
-
-/*
- * fallpos:
- *.Pick a random position around the give (y, x) coordinates
- */
-bool
-fallpos(coord* pos, coord* newpos)
-{
-    int y, x, cnt, ch;
-
-    cnt = 0;
-    for (y = pos.y - 1; y <= pos.y + 1; y++)
-        for (x = pos.x - 1; x <= pos.x + 1; x++)
+        oweapon = cur_weapon;
+        if (!dropcheck(cur_weapon))
         {
-            /*
-             * check to make certain the spot is empty, if it is,
-             * put the object there, set it in the level list
-             * and re-draw the room if he can see it
-             */
-            if (y == hero.y && x == hero.x)
-                continue;
-            if (((ch = chat(y, x)) == FLOOR || ch == PASSAGE)
-                        && rnd(++cnt) == 0)
+            cur_weapon = oweapon;
+            return;
+        }
+        cur_weapon = oweapon;
+        if ((obj = get_item("wield", WEAPON)) == null)
+        {
+            after = false;
+            return;
+        }
+
+        if (obj.o_type == ARMOR)
+        {
+            msg("you can't wield armor");
+            after = false;
+            return;
+        }
+
+        if (is_current(obj))
+        {
+            after = false;
+            return;
+        }
+
+        sp = inv_name(obj, true);
+        cur_weapon = obj;
+        if (!terse)
+            addmsg("you are now ");
+        msg("wielding %s (%c)", sp, obj.o_packch);
+    }
+
+    /// <summary>
+    /// Pick a random position around the given (y, x) coordinates
+    /// </summary>
+    bool fallpos(coord pos, out coord newpos)
+    {
+        newpos = default;
+
+        int cnt = 0;
+
+        for (int y = pos.y - 1; y <= pos.y + 1; y++)
+        {
+            for (int x = pos.x - 1; x <= pos.x + 1; x++)
             {
-                newpos.y = y;
-                newpos.x = x;
+                /*
+                 * check to make certain the spot is empty, if it is,
+                 * put the object there, set it in the level list
+                 * and re-draw the room if he can see it
+                 */
+                if (y == hero.y && x == hero.x)
+                    continue;
+
+                int ch;
+                if (((ch = chat(y, x)) == FLOOR || ch == PASSAGE) && rnd(++cnt) == 0)
+                {
+                    newpos.y = y;
+                    newpos.x = x;
+                }
             }
         }
-    return (bool) (cnt != 0);
-}
-#endif
+
+        return (cnt != 0);
+    }
 }

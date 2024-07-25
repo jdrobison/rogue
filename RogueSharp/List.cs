@@ -52,7 +52,7 @@ internal partial class Program
     /// <summary>
     /// Throw the whole blamed thing away
     /// </summary>
-    void _free_list(ref THING? ptr)
+    void free_list(ref THING? ptr)
     {
         while (ptr != null)
         {

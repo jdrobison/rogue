@@ -17,27 +17,37 @@ internal partial class Program
         }
 
         public char h_ch      { get; }
-        public string? h_desc { get; }
+        public string h_desc  { get; }
         public bool h_print   { get; }
     }
 
     /*
      * Coordinate data type
      */
-    public class coord
+    public struct coord
     {
         public int x;
         public int y;
 
+        public coord(int x, int y)
+        {
+            this.x = x;
+            this.y = y;
+        }
+
         internal coord Clone()
         {
-            coord clone = new();
-
+            coord clone;
             clone.x = x;
             clone.y = y;
 
             return clone;
         }
+
+        public override string ToString() => $"(y:{y},x:{x})";
+
+        public static bool operator ==(coord a, coord b) => a.x == b.x && a.y == b.y;
+        public static bool operator !=(coord a, coord b) => !(a == b);
     }
 
     /*
@@ -52,7 +62,7 @@ internal partial class Program
             oi_worth = worth;
         }
 
-        public string oi_name { get; }
+        public string oi_name { get; set; }
         public int oi_prob    { get; set; }
         public int oi_worth   { get; set; }
 
@@ -65,9 +75,9 @@ internal partial class Program
      */
     public class room
     {
-        public coord r_pos = new();                     /* Upper left corner */
-        public coord r_max = new();                     /* Size of room */
-        public coord r_gold = new();                    /* Where the gold is */
+        public coord r_pos;                             /* Upper left corner */
+        public coord r_max;                             /* Size of room */
+        public coord r_gold;                            /* Where the gold is */
         public int r_goldval;                           /* How much the gold is worth */
         public short r_flags;                           /* info about the room */
         public int r_nexits;                            /* Number of exits */
@@ -122,22 +132,22 @@ internal partial class Program
         public THING? l_next;               /* Next thing in chain */
         public THING? l_prev;               /* Previous thing in chain */
                                             
-        // data for things                  
-        public coord t_pos = new();         /* Position */
+        // data for creatures/player                  
+        public coord t_pos;                 /* Position */
         public bool t_turn;                 /* If slowed, is it a turn to move */
         public char t_type;                 /* What it is */
         public char t_disguise;             /* What mimic looks like */
         public char t_oldch;                /* Character that was where it was */
-        public coord t_dest = new();        /* Where it is running to */
+        public coord t_dest;                /* Where it is running to */
         public int t_flags;                 /* State word */
         public stats t_stats = new();       /* Physical description */
         public room t_room = new();         /* Current room for thing */
         public THING? t_pack;               /* What the thing is carrying */
         public int t_reserved;             
                                             
-        // data for objects                 
+        // data for items                 
         public int o_type;                  /* What kind of object it is */
-        public coord o_pos = new();         /* Where it lives on the screen */
+        public coord o_pos;                 /* Where it lives on the screen */
         public string? o_text;              /* What it says if you read it */
         public int  o_launch;               /* What you need to launch it */
         public char o_packch;               /* What character it is in the pack */
@@ -152,17 +162,9 @@ internal partial class Program
         public int o_group;                 /* group number for this object */
         public string? o_label;             /* Label for object */
 
-        public int o_charges
-        {
-            get => o_arm;
-            set => o_arm = value;
-        }
+        public ref int o_charges => ref o_arm;
 
-        public int o_goldval
-        {
-            get => o_arm;
-            set => o_arm = value;
-        }
+        public ref int o_goldval => ref o_arm;
 
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         private string DebuggerDisplay
@@ -236,14 +238,14 @@ internal partial class Program
     class PLACE
     {
         public char p_ch;
-        public char p_flags;
+        public byte p_flags;
         public THING? p_monst;
     }
 
     /*
      * Array containing information on all the various types of monsters
      */
-    class monster
+    public class monster
     {
         public monster (string name, int carry, int flags, stats stats)
         {
@@ -261,9 +263,9 @@ internal partial class Program
             m_stats = other.m_stats;
         }
 
-        public string m_name;               /* What to call the monster */
-        public int m_carry;                 /* Probability of carrying something */
-        public int m_flags;                 /* things about the monster */
+        public string m_name { get; }       /* What to call the monster */
+        public int m_carry { get; }         /* Probability of carrying something */
+        public int m_flags { get; }         /* things about the monster */
         public stats m_stats;               /* Initial stats */
     };
 

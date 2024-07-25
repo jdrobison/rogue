@@ -1,14 +1,4 @@
-﻿using System.Collections.Immutable;
-using System.Diagnostics.Metrics;
-using System.Numerics;
-using System.Reflection.Emit;
-using System.Xml.Linq;
-
-using RogueSharp;
-using RogueSharp.Things;
-using RogueSharp.Things.Monsters;
-
-using Windows.Win32.System.Console;
+﻿using static RogueSharp.Helpers.CursesHelper;
 
 namespace RogueSharp;
 
@@ -112,7 +102,7 @@ internal partial class Program
         'N', 'Y', 'F', 'T', 'W', 'P', 'X', 'U', 'M', 'V', 'G', 'J', 'D'
     ];
 
-    static char[] wand_mons = 
+    static char[] wand_mons =
     [
         'K',  'E', 'B',  'S', 'H', '\0', 'R',  'O', 'Z', '\0', 'C', 'Q', 'A',
         '\0', 'Y', '\0', 'T', 'W', 'P',  '\0', 'U', 'M', 'V',  'G', 'J', '\0'
@@ -138,99 +128,94 @@ internal partial class Program
         return mons[d];
     }
 
-#if false
-    /*
-     * new_monster:
-     *    Pick a new monster and add it to the list
-     */
-
-    void
-    new_monster(THING* tp, char type, coord* cp)
+    /// <summary>
+    /// Pick a new monster and add it to the list
+    /// </summary>
+    void new_monster(THING tp, char type, coord cp)
     {
-    struct monster *mp;
-    int lev_add;
+        monster mp;
+        int lev_add;
 
-    if ((lev_add = level - AMULETLEVEL) < 0)
-    lev_add = 0;
-    attach(mlist, tp);
-    tp->t_type = type;
-    tp->t_disguise = type;
-    tp->t_pos = *cp;
-    move(cp->y, cp->x);
-    tp->t_oldch = CCHAR(inch() );
-    tp->t_room = roomin(cp);
-    moat(cp->y, cp->x) = tp;
-    mp = &monsters[tp->t_type-'A'];
-    tp->t_stats.s_lvl = mp->m_stats.s_lvl + lev_add;
-    tp->t_stats.s_maxhp = tp->t_stats.s_hpt = roll(tp->t_stats.s_lvl, 8);
-    tp->t_stats.s_arm = mp->m_stats.s_arm - lev_add;
-    strcpy(tp->t_stats.s_dmg, mp->m_stats.s_dmg);
-    tp->t_stats.s_str = mp->m_stats.s_str;
-    tp->t_stats.s_exp = mp->m_stats.s_exp + lev_add* 10 + exp_add(tp);
-    tp->t_flags = mp->m_flags;
-    if (level > 29)
-    tp->t_flags |= ISHASTE;
-    tp->t_turn = true;
-    tp->t_pack = null;
-    if (ISWEARING(R_AGGR))
-    runto(cp);
-    if (type == 'X')
-    tp->t_disguise = rnd_thing();
-}
+        if ((lev_add = level - AMULETLEVEL) < 0)
+            lev_add = 0;
+        attach(ref mlist, tp);
+        tp.t_type = type;
+        tp.t_disguise = type;
+        tp.t_pos = cp;
+        move(cp.y, cp.x);
+        tp.t_oldch = CCHAR(inch());
+        if (roomin(cp) is not room room)
+            throw new InvalidOperationException("coordinate is not in a room");
+        tp.t_room = room;
+        set_moat(cp.y, cp.x, tp);
+        mp = monsters[tp.t_type-'A'];
+        tp.t_stats.s_lvl = mp.m_stats.s_lvl + lev_add;
+        tp.t_stats.s_maxhp = tp.t_stats.s_hpt = roll(tp.t_stats.s_lvl, 8);
+        tp.t_stats.s_arm = mp.m_stats.s_arm - lev_add;
+        tp.t_stats.s_dmg = mp.m_stats.s_dmg;
+        tp.t_stats.s_str = mp.m_stats.s_str;
+        tp.t_stats.s_exp = mp.m_stats.s_exp + lev_add* 10 + exp_add(tp);
+        tp.t_flags = mp.m_flags;
+        if (level > 29)
+            tp.t_flags |= ISHASTE;
+        tp.t_turn = true;
+        tp.t_pack = null;
+        if (ISWEARING(R_AGGR))
+            runto(cp);
+        if (type == 'X')
+            tp.t_disguise = rnd_thing();
+    }
 
-/*
- * expadd:
- *    Experience to add for this monster's level/hit points
- */
-int
-exp_add(THING* tp)
-{
-    int mod;
-
-    if (tp->t_stats.s_lvl == 1)
-        mod = tp->t_stats.s_maxhp / 8;
-    else
-        mod = tp->t_stats.s_maxhp / 6;
-    if (tp->t_stats.s_lvl > 9)
-        mod *= 20;
-    else if (tp->t_stats.s_lvl > 6)
-        mod *= 4;
-    return mod;
-}
-
-/*
- * wanderer:
- *    Create a new wandering monster and aim it at the player
- */
-
-void
-wanderer()
-{
-    THING *tp;
-    static coord cp;
-
-    tp = new_item();
-    do
+    /// <summary>
+    /// Experience to add for this monster's level/hit points
+    /// </summary>
+    int exp_add(THING tp)
     {
-        find_floor((struct room *) null, &cp, false, true);
-    } while (roomin(&cp) == proom) ;
-new_monster(tp, randmonster(true), &cp);
-if (on(player, SEEMONST))
-{
-    standout();
-    if (!on(player, ISHALU))
-        addch(tp->t_type);
-    else
-        addch(rnd(26) + 'A');
-    standend();
-}
-runto(&tp->t_pos);
+        int mod;
+
+        if (tp.t_stats.s_lvl == 1)
+            mod = tp.t_stats.s_maxhp / 8;
+        else
+            mod = tp.t_stats.s_maxhp / 6;
+
+        if (tp.t_stats.s_lvl > 9)
+            mod *= 20;
+        else if (tp.t_stats.s_lvl > 6)
+            mod *= 4;
+
+        return mod;
+    }
+
+    /// <summary>
+    /// Create a new wandering monster and aim it at the player
+    /// </summary>
+    void wanderer()
+    {
+        THING tp;
+        coord pos;
+
+        tp = new_item();
+        do
+        {
+            find_floor(null, out pos, 0, true);
+        } while (roomin(pos) == proom);
+
+        new_monster(tp, randmonster(true), pos);
+        if (on(player, SEEMONST))
+        {
+            standout();
+            if (!on(player, ISHALU))
+                addch(tp.t_type);
+            else
+                addch((char)(rnd(26) + 'A'));
+            standend();
+        }
+        runto(tp.t_pos);
 #if MASTER
-if (wizard)
-    msg("started a wandering %s", monsters[tp->t_type-'A'].m_name);
+        if (wizard)
+            msg("started a wandering %s", GetMonsterName(tp.t_type));
 #endif
-}
-#endif
+    }
 
     /// <summary>
     /// What to do when the hero steps next to a monster
@@ -297,16 +282,14 @@ if (wizard)
         return tp;
     }
 
-#if false
     /// <summary>
     /// Give a pack to a monster if it deserves one
     /// </summary>
     void give_pack(THING tp)
     {
         if (level >= max_level && rnd(100) < monsters[tp.t_type-'A'].m_carry)
-            attach(tp.t_pack, new_thing());
+            attach(ref tp.t_pack, new_thing());
     }
-#endif
 
     /// <summary>
     /// See if a creature save against something

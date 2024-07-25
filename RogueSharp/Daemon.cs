@@ -14,7 +14,7 @@ internal partial class Program
 {
     private const int DAEMON = -1;
 
-    readonly List<delayed_action> d_list = new();
+    List<delayed_action> d_list = new();
 
     /// <summary>
     /// Find a particular slot in the table

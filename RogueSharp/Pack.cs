@@ -9,7 +9,7 @@ internal partial class Program
     /// non-null use it as the linked_list pointer instead of gettting
     /// it off the ground.
     /// </summary>
-    void add_pack(THING obj, bool silent)
+    void add_pack(THING? obj, bool silent)
     {
         bool from_floor;
 
@@ -230,40 +230,39 @@ internal partial class Program
         throw new Exception("no more space available in pack");
     }
 
-#if false
-    /*
-     * inventory:
-     *    List what is in the pack.  Return true if there is something of
-     *    the given type.
-     */
-    bool
-    inventory(THING list, int type)
+    /// <summary>
+    /// List what is in the pack.  Return true if there is something of the given type.
+    /// </summary>
+    bool inventory(THING? list, int type)
     {
-        static char inv_temp[MAXSTR];
+        string inv_temp;
 
         n_objs = 0;
         for (; list != null; list = next(list))
         {
-            if (type && type != list.o_type && !(type == CALLABLE &&
+            if (type != 0 && type != list.o_type && !(type == CALLABLE &&
                 list.o_type != FOOD && list.o_type != AMULET) &&
                 !(type == R_OR_S && (list.o_type == RING || list.o_type == STICK)))
                 continue;
             n_objs++;
 #if MASTER
-            if (!list.o_packch)
-                strcpy(inv_temp, "%s");
+            if (list.o_packch != '\0')
+                inv_temp = "%s";
             else
 #endif
-            sprintf(inv_temp, "%c) %%s", list.o_packch);
+            inv_temp = $"{list.o_packch}) %s";
             msg_esc = true;
+
             if (add_line(inv_temp, inv_name(list, false)) == ESCAPE)
             {
                 msg_esc = false;
                 msg("");
                 return true;
             }
+
             msg_esc = false;
         }
+
         if (n_objs == 0)
         {
             if (terse)
@@ -274,41 +273,39 @@ internal partial class Program
                         "you don't have anything appropriate");
             return false;
         }
+
         end_line();
         return true;
     }
 
-    /*
-     * pick_up:
-     *    Add something to characters pack.
-     */
-
-    void
-    pick_up(char ch)
+    /// <summary>
+    /// Add something to characters pack.
+    /// </summary>
+    void pick_up(char ch)
     {
-        THING *obj;
-
         if (on(player, ISLEVIT))
             return;
 
-        obj = find_obj(hero.y, hero.x);
+        THING? obj = find_obj(hero.y, hero.x);
+
         if (move_on)
-            move_msg(obj);
+        {
+            if (obj != null)
+                move_msg(obj);
+        }
         else
+        {
             switch (ch)
             {
                 case GOLD:
                     if (obj == null)
                         return;
                     money(obj.o_goldval);
-                    detach(lvl_obj, obj);
+                    detach(ref lvl_obj, obj);
                     discard(obj);
                     proom.r_goldval = 0;
                     break;
-                default:
-#if MASTER
-                    debug("Where did you pick a '%s' up???", unctrl(ch));
-#endif
+
                 case ARMOR:
                 case POTION:
                 case FOOD:
@@ -317,11 +314,17 @@ internal partial class Program
                 case AMULET:
                 case RING:
                 case STICK:
-                    add_pack((THING) null, false);
+                    add_pack(null, false);
+                    break;
+
+                default:
+#if MASTER
+                    debug("Where did you pick a '%s' up???", unctrl(ch));
+#endif
                     break;
             }
+        }
     }
-#endif
 
     /// <summary>
     /// Print out the message if you are just moving onto an object
@@ -333,16 +336,11 @@ internal partial class Program
         msg("moved onto %s", inv_name(obj, true));
     }
 
-#if false
-    /*
-     * picky_inven:
-     *    Allow player to inventory a single item
-     */
-
-    void
-    picky_inven()
+    /// <summary>
+    /// Allow player to inventory a single item
+    /// </summary>
+    void picky_inven()
     {
-        THING *obj;
         char mch;
 
         if (pack == null)
@@ -353,35 +351,37 @@ internal partial class Program
         {
             msg(terse ? "item: " : "which item do you wish to inventory: ");
             mpos = 0;
-            if ((mch = readchar()) == ESCAPE)
+            if ((mch = readchar().KeyChar) == ESCAPE)
             {
                 msg("");
                 return;
             }
-            for (obj = pack; obj != null; obj = next(obj))
+
+            for (THING? obj = pack; obj != null; obj = next(obj))
+            {
                 if (mch == obj.o_packch)
                 {
                     msg("%c) %s", mch, inv_name(obj, false));
                     return;
                 }
+            }
+
             msg("'%s' not in pack", unctrl(mch));
         }
     }
 
-    /*
-     * get_item:
-     *    Pick something out of a pack for a purpose
-     */
-    THING
-    get_item(char* purpose, int type)
+    /// <summary>
+    /// Pick something out of a pack for a purpose
+    /// </summary>
+    THING? get_item(string purpose, int type)
     {
-        THING *obj;
+        THING? obj;
         char ch;
 
         if (pack == null)
             msg("you aren't carrying anything");
         else if (again)
-            if (last_pick)
+            if (last_pick != null)
                 return last_pick;
             else
                 msg("you ran out");
@@ -395,7 +395,7 @@ internal partial class Program
                 if (terse)
                     addmsg(" what");
                 msg("? (* for list): ");
-                ch = readchar();
+                ch = readchar().KeyChar;
                 mpos = 0;
                 /*
                  * Give the poor player a chance to abort the command
@@ -411,7 +411,7 @@ internal partial class Program
                 if (ch == '*')
                 {
                     mpos = 0;
-                    if (inventory(pack, type) == 0)
+                    if (inventory(pack, type))
                     {
                         after = false;
                         return null;
@@ -433,17 +433,15 @@ internal partial class Program
         return null;
     }
 
-    /*
-     * money:
-     *    Add or subtract gold from the pack
-     */
-
-    void
-    money(int value)
+    /// <summary>
+    /// Add gold to the pack
+    /// </summary>
+    void money(int value)
     {
         purse += value;
         mvaddch(hero.y, hero.x, floor_ch());
-        chat(hero.y, hero.x) = (proom.r_flags & ISGONE) ? PASSAGE : FLOOR;
+        set_chat(hero.y, hero.x, ((proom.r_flags & ISGONE) != 0) ? PASSAGE : FLOOR);
+
         if (value > 0)
         {
             if (!terse)
@@ -451,7 +449,6 @@ internal partial class Program
             msg("%d gold pieces", value);
         }
     }
-#endif
 
     /// <summary>
     /// Return the appropriate floor character for her room
@@ -460,37 +457,29 @@ internal partial class Program
     {
         if ((proom.r_flags & ISGONE) != 0)
             return PASSAGE;
+
         return (show_floor() ? FLOOR : ' ');
     }
 
-#if false
-    /*
-     * floor_at:
-     *    Return the character at hero's position, taking see_floor
-     *    into account
-     */
-    char
-    floor_at()
+    /// <summary>
+    /// Return the character at hero's position, taking see_floor into account
+    /// </summary>
+    char floor_at()
     {
-        char ch;
-
-        ch = chat(hero.y, hero.x);
+        char ch = chat(hero.y, hero.x);
         if (ch == FLOOR)
-            ch = floor_ch();
+            return floor_ch();
+
         return ch;
     }
 
-    /*
-     * reset_last:
-     *    Reset the last command when the current one is aborted
-     */
-
-    void
-    reset_last()
+    /// <summary>
+    /// Reset the last command when the current one is aborted
+    /// </summary>
+    void reset_last()
     {
-        last_comm = l_last_comm;
-        last_dir = l_last_dir;
+        last_commKey = l_last_commKey;
+        last_dirKey = l_last_dirKey;
         last_pick = l_last_pick;
     }
-#endif
 }

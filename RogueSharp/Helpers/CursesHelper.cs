@@ -21,7 +21,7 @@ internal static class CursesHelper
     /// <summary>
     /// Write a character at a given position on the window
     /// </summary>
-    private static void mvwaddch(CursesWindow window, int y, int x, char ch) => window.mvaddch(y, x, ch);
+    internal static void mvwaddch(CursesWindow window, int y, int x, char ch) => window.mvaddch(y, x, ch);
 
     /// <summary>
     /// Write a character to the window
@@ -65,6 +65,15 @@ internal static class CursesHelper
     internal static void wclear(CursesWindow window) => window.clear();
 
     #endregion clear
+    #region clearok
+
+    /// <summary>
+    /// If <paramref name="value"/> is <see langword="true"/> the next call to <see cref="refresh"/> 
+    /// with this window will clear the screen completely and redraw the entire screen from scratch. 
+    /// </summary>
+    internal static void clearok(CursesWindow window, bool value) => window.clearok(value);
+
+    #endregion clearok
     #region clrtoeol
 
     /// <summary>
@@ -83,6 +92,20 @@ internal static class CursesHelper
     public static int COLS { get; } = Console.WindowWidth;
 
     #endregion COLS
+    #region curscr
+
+    public static CursesWindow curscr { get; set; } = CursesWindow.Default;
+
+    #endregion curscr
+    #region delwin
+
+    /// <summary>
+    /// Deletes <paramref name="window"/>, freeing all memory associated with it. 
+    /// Subwindows must be deleted before the main window can be deleted.
+    /// </summary>
+    internal static void delwin(CursesWindow window) => window.delwin();
+
+    #endregion delwin
     #region endwin
 
     /// <summary>
@@ -117,6 +140,20 @@ internal static class CursesHelper
     internal static char erasechar() => CursesWindow.EraseCharacter;
 
     #endregion erasechar
+    #region flushinp
+
+    /// <summary>
+    /// Discards any typeahead that has been typed by the user and has not yet been read by the program.
+    /// </summary>
+    public static void flushinp()
+    {
+        while (Console.KeyAvailable)
+        {
+            _ = Console.ReadKey(intercept: true);
+        }
+    }
+
+    #endregion flushinp
     #region getyx
 
     /// <summary>
@@ -127,6 +164,31 @@ internal static class CursesHelper
     internal static void getyx(CursesWindow window, out int y, out int x) => window.getyx(out y, out x);
 
     #endregion getyx
+    #region getstr
+
+    /// <summary>
+    /// Gets a string from the terminal associated with the default window.  Calls characters from the 
+    /// console and places each received character in <paramref name="s"/> until a newline is 
+    /// received, which is also placed in <paramref name="s"/>. The erase and kill characters 
+    /// user are processed.
+    internal static void getstr(out string s) => CursesWindow.Default.getstr(out s);
+
+    /// <summary>
+    /// Gets a string from the terminal associated with <paramref name="window"/>.  Calls characters from the 
+    /// console and places each received character in <paramref name="s"/> until a newline is 
+    /// received, which is also placed in <paramref name="s"/>. The erase and kill characters 
+    /// user are processed.
+    internal static void wgetstr(CursesWindow window, out string s) => window.getstr(out s);
+
+    #endregion getstr
+    #region idlok
+
+    /// <summary>
+    /// 
+    /// </summary>
+    internal static void idlok(CursesWindow window, bool value) => window.idlok(value);
+
+    #endregion idlok
     #region inch
 
     /// <summary>
@@ -156,21 +218,35 @@ internal static class CursesHelper
     {
         Console.CursorTop = Console.CursorLeft = 0;
 
-        CursesWindow.CreateDefaultWindow(width: COLS, height: LINES);
+        CursesWindow.CreateDefaultWindow(LINES, COLS);
         move(0, 0);
         refresh();
         return stdscr;
     }
 
     #endregion initscr
+    #region keypad
+
+    internal static void keypad(CursesWindow window, bool value) => window.keypad(value);
+
+    #endregion keypad
     #region killchar
 
     /// <summary>
     /// Returns current erase character for the console
     /// </summary>
-    internal static char killchar() => (char) ConsoleKey.Escape;
+    internal static char killchar() => (char) CursesWindow.KillKey;
 
     #endregion killchar
+    #region leaveok
+
+    /// <summary>
+    /// If <paramref name="value"/> is <see langword="true"/> the cursor can be left wherever
+    /// the next update happens to leave it.
+    /// </summary>
+    internal static void leaveok(CursesWindow window, bool value) => window.leaveok(value);
+
+    #endregion leaveok
     #region LINES
 
     public static int LINES { get; } = Console.WindowHeight;
@@ -193,14 +269,31 @@ internal static class CursesHelper
     internal static void wmove(CursesWindow window, int y, int x) => window.move(y, x);
 
     #endregion move
+    #region mvwin
+
+    /// <summary>
+    /// Moves a window to the specified position.
+    /// </summary>
+    /// <param name="top">Top coordinate of the window, relative to the physical screen</param>
+    /// <param name="left">Left coordinate of the window, relative to the physical screen</param>
+    /// <returns>
+    /// <see langword="true"/> if the window was moved, or <see langword="false"/> if moving the 
+    /// window would cause it to be off the screen.
+    /// </returns>
+    internal static bool mvwin(CursesWindow window, int top, int left) => window.mvwin(top, left);
+
+    #endregion mvwin
     #region newwin
 
     /// <summary>
     /// Create a new window with the specified width and height
     /// </summary>
-    /// <param name="width">Window width</param>
-    /// <param name="height">Window height</param>
-    internal static CursesWindow newwin(int width, int height, int top, int left) => new CursesWindow(width, height, top, left);
+    /// <param name="nLines">Window height</param>
+    /// <param name="nCols">Window width</param>
+    /// <param name="top">Top coordinate of the window, relative to the physical screen</param>
+    /// <param name="left">Left coordinate of the window, relative to the physical screen</param>
+    internal static CursesWindow newwin(int nLines, int nCols, int top, int left) 
+        => CursesWindow.CreateInstance(nLines, nCols, top, left);
 
     #endregion newwin
     #region printw
@@ -239,11 +332,67 @@ internal static class CursesHelper
     internal static void wrefresh(CursesWindow window) => window.refresh();
 
     #endregion refresh
+    #region resetltchars
+
+    public static void resetltchars()
+    { }
+
+    #endregion resetltchars
+    #region standend
+
+    /// <summary>
+    /// Removes all attributes from the default window.
+    /// </summary>
+    public static void standend() => CursesWindow.Default.standend();
+
+    /// <summary>
+    /// Removes all attributes from a window.
+    /// </summary>
+    public static void wstandend(CursesWindow window) => window.standend();
+
+    #endregion standend
+    #region standout
+
+    /// <summary>
+    /// Applies the standout attribute to the default window.
+    /// </summary>
+    public static void standout() => CursesWindow.Default.standout();
+
+    /// <summary>
+    /// Applies the standout attribute to a window.
+    /// </summary>
+    public static void wstandout(CursesWindow window) => window.standout();
+
+    #endregion standout
     #region stdscr
 
     public static CursesWindow stdscr => CursesWindow.Default;
 
     #endregion stdscr
+    #region subwin
+
+    /// <summary>
+    /// Create a new sub-window or <paramref name="parent"/> with the specified width and height
+    /// </summary>
+    /// <param name="parent">The parent window</param>
+    /// <param name="nLines">Window height</param>
+    /// <param name="nCols">Window width</param>
+    /// <param name="top">Top coordinate of the window, relative to the physical screen</param>
+    /// <param name="left">Left coordinate of the window, relative to the physical screen</param>
+    internal static CursesWindow subwin(CursesWindow parent, int nLines, int nCols, int top, int left) 
+        => CursesWindow.CreateInstance(parent, nLines, nCols, top, left);
+
+    #endregion subwin
+    #region touchwin
+
+    /// <summary>
+    /// Marks an entire window as changed, so that the next call to <see cref="refresh"/> will 
+    /// refresh the entire window.
+    /// </summary>
+    /// <param name="window">The window</param>
+    internal static void touchwin(CursesWindow window) => window.touch();
+
+    #endregion touchwin
     #region unctrl
 
     /// <summary>
@@ -257,6 +406,24 @@ internal static class CursesHelper
     /// Control characters are displayed in the ^X notation. Printing characters are displayed as is.
     /// </summary>
     public static string unctrl(int ch) => unctrl((char) ch);
+
+    /// <summary>
+    /// Returns a character string which is a printable representation of <paramref name="key"/>.
+    /// Control characters are displayed in the ^X notation. Printing characters are displayed as is.
+    /// </summary>
+    public static string unctrl(ConsoleKeyInfo key)
+    {
+        if (key.Modifiers.HasFlag(ConsoleModifiers.Control))
+        {
+            char ch = key.Modifiers.HasFlag(ConsoleModifiers.Shift)
+                ? char.ToUpper((char) key.Key)
+                : char.ToLower((char) key.Key);
+
+            return $"^{ch}";
+        }
+
+        return unctrl(key.KeyChar);
+    }
 
     #endregion unctrl
 }

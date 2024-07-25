@@ -1,4 +1,6 @@
 ﻿using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
+using System.Numerics;
 
 using RogueSharp.Helpers;
 
@@ -91,11 +93,13 @@ internal partial class Program
         //    }
         //}
 
-        //if (args.Length == 2)
-        //{ 
-        //    if (!restore(args[1], envp))    /* Note: restore will never return */
-        //        my_exit(1);
-        //}
+        if (args.Length == 2)
+        {
+            if (restore(args[1]))
+                playit();           // does not return
+            else
+                my_exit(1);
+        }
 
 #if MASTER
         if (wizard)
@@ -114,7 +118,36 @@ internal partial class Program
         init_colors();          /* Set up colors of potions */
         init_stones();          /* Set up stone settings of rings */
         init_materials();       /* Set up materials of wands */
+        //setup();
 
+        /*
+         * The screen must be at least NUMLINES x NUMCOLS
+         */
+        if (LINES < NUMLINES || COLS < NUMCOLS)
+        {
+            Console.WriteLine("\nSorry, the screen must be at least {0}x{1}", NUMLINES, NUMCOLS);
+            endwin();
+            my_exit(1);
+        }
+
+        /*
+         * Set up windows
+         */
+        hw = newwin(LINES, COLS, 0, 0);
+        idlok(stdscr, true);
+        idlok(hw, true);
+#if MASTER
+        noscore = wizard;
+#endif
+        new_level();            /* Draw current level */
+        /*
+         * Start up daemons and fuses
+         */
+        start_daemon(runners, 0, AFTER);
+        start_daemon(doctor, 0, AFTER);
+        fuse(swander, 0, WANDERTIME, AFTER);
+        start_daemon(stomach, 0, AFTER);
+        playit();
     }
 
     private void open_score()
@@ -225,43 +258,24 @@ internal partial class Program
         curscr->_cury = oy;
         curscr->_curx = ox;
     }
+#endif
 
-    /*
-     * playit:
-     *	The main loop of the program.  Loop until the game is over,
-     *	refreshing things and looking at the proper times.
-     */
-
-    void
-    playit()
+    /// <summary>
+    /// loop of the program.  Loop until the game is over,
+    /// refreshing things and looking at the proper times.
+    /// </summary>
+    [DoesNotReturn]
+    void playit()
     {
-        char *opts;
-
-        /*
-         * set up defaults for slow terminals
-         */
-
-        if (baudrate() <= 1200)
-        {
-            terse = TRUE;
-            jump = TRUE;
-            see_floor = FALSE;
-        }
-
-        if (md_hasclreol())
+        //if (md_hasclreol())
             inv_type = INV_CLEAR;
 
-        /*
-         * parse environment declaration of options
-         */
-        if ((opts = getenv("ROGUEOPTS")) != NULL)
-            parse_opts(opts);
-
-
         oldpos = hero;
-        oldrp = roomin(&hero);
+        oldrp = roomin(hero) ?? new room();
+
         while (playing)
             command();          /* Command execution */
+
         endit(0);
     }
 
@@ -270,23 +284,22 @@ internal partial class Program
     /// </summary>
     void quit(int _)
     {
-        int oy, ox;
-
         /*
          * Reset the signal in case we got here via an interrupt
          */
         if (!q_comm)
             mpos = 0;
-        getyx(curscr, oy, ox);
+        getyx(curscr, out int oy, out int ox);
         msg("really quit?");
-        if (readchar() == 'y')
+
+        if (readchar().KeyChar == 'y')
         {
-            signal(SIGINT, leave);
+            //signal(SIGINT, leave);
             clear();
             mvprintw(LINES - 2, 0, "You quit with %d gold pieces", purse);
             move(LINES - 1, 0);
             refresh();
-            score(purse, 1, 0);
+            score(purse, 1, '\0');
             my_exit(0);
         }
         else
@@ -298,10 +311,11 @@ internal partial class Program
             refresh();
             mpos = 0;
             count = 0;
-            to_death = FALSE;
+            to_death = false;
         }
     }
 
+#if false
     /// <summary>
     /// Leave quickly, but courteously
     /// </summary>

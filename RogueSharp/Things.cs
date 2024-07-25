@@ -1,4 +1,7 @@
-﻿using System.Text;
+﻿using System.Net.NetworkInformation;
+using System.Text;
+
+using RogueSharp.Helpers;
 
 using static RogueSharp.Helpers.CursesHelper;
 
@@ -6,6 +9,11 @@ namespace RogueSharp;
 
 internal partial class Program
 {
+    private bool _things_newpage;
+    private int _things_line_cnt;
+    private string? _things_lastfmt;
+    private object? _things_lastarg;
+
     /// <summary>
     /// Return the name of something as it would appear in an  inventory.
     /// </summary>
@@ -128,17 +136,13 @@ internal partial class Program
         return builder.ToString();
     }
 
-#if false
-    /*
-     * drop:
-     *    Put something down
-     */
-
-    void
-    drop()
+    /// <summary>
+    /// Put something down
+    /// </summary>
+    void drop()
     {
         char ch;
-        THING *obj;
+        THING? obj;
 
         ch = chat(hero.y, hero.x);
         if (ch != FLOOR && ch != PASSAGE)
@@ -147,42 +151,51 @@ internal partial class Program
             msg("there is something there already");
             return;
         }
+
         if ((obj = get_item("drop", 0)) == null)
             return;
         if (!dropcheck(obj))
             return;
-        obj = leave_pack(obj, true, (bool) !ISMULT(obj.o_type));
+
+        obj = leave_pack(obj, true, !ISMULT(obj.o_type));
+
         /*
          * Link it into the level object list
          */
-        attach(lvl_obj, obj);
-        chat(hero.y, hero.x) = (char) obj.o_type;
-        flat(hero.y, hero.x) |= F_DROPPED;
+        attach(ref lvl_obj, obj);
+        set_chat(hero.y, hero.x, (char) obj.o_type);
+        byte fl = flat(hero.y, hero.x);
+        set_flat(hero.y, hero.x, (byte) (fl | F_DROPPED));
         obj.o_pos = hero;
         if (obj.o_type == AMULET)
             amulet = false;
         msg("dropped %s", inv_name(obj, true));
     }
 
-    /*
-     * dropcheck:
-     *    Do special checks for dropping or unweilding|unwearing|unringing
-     */
-    bool
-    dropcheck(THING obj)
+    /// <summary>
+    /// Do special checks for dropping or unweilding|unwearing|unringing
+    /// </summary>
+    /// <param name="obj"></param>
+    /// <returns></returns>
+    bool dropcheck(THING? obj)
     {
         if (obj == null)
             return true;
+
         if (obj != cur_armor && obj != cur_weapon
-        && obj != cur_ring[LEFT] && obj != cur_ring[RIGHT])
+            && obj != cur_ring[LEFT] && obj != cur_ring[RIGHT])
             return true;
-        if (obj.o_flags & ISCURSED)
+
+        if ((obj.o_flags & ISCURSED) != 0)
         {
             msg("you can't.  It appears to be cursed");
             return false;
         }
+
         if (obj == cur_weapon)
+        {
             cur_weapon = null;
+        }
         else if (obj == cur_armor)
         {
             waste_time();
@@ -202,52 +215,52 @@ internal partial class Program
                     break;
             }
         }
+
         return true;
     }
 
-    /*
-     * new_thing:
-     *    Return a new thing
-     */
-    THING
-    new_thing()
+    /// <summary>
+    /// Return a new thing
+    /// </summary>
+    THING new_thing()
     {
-        THING *cur;
+        THING cur;
         int r;
 
         cur = new_item();
         cur.o_hplus = 0;
         cur.o_dplus = 0;
-        strncpy(cur.o_damage, "0x0", sizeof(cur.o_damage));
-        strncpy(cur.o_hurldmg, "0x0", sizeof(cur.o_hurldmg));
+        cur.o_damage = "0x0";
+        cur.o_hurldmg = "0x0";
         cur.o_arm = 11;
         cur.o_count = 1;
         cur.o_group = 0;
         cur.o_flags = 0;
+
         /*
          * Decide what kind of object it will be
          * If we haven't had food for a while, let it be food.
          */
-        switch (no_food > 3 ? 2 : pick_one(things, NUMTHINGS))
+        switch (no_food > 3 ? 2 : pick_one(things))
         {
             case 0:
                 cur.o_type = POTION;
-                cur.o_which = pick_one(pot_info, MAXPOTIONS);
+                cur.o_which = pick_one(pot_info);
                 break;
-case 1:
-        cur.o_type = SCROLL;
-                cur.o_which = pick_one(scr_info, MAXSCROLLS);
+            case 1:
+                cur.o_type = SCROLL;
+                cur.o_which = pick_one(scr_info);
                 break;
-case 2:
-        cur.o_type = FOOD;
+            case 2:
+                cur.o_type = FOOD;
                 no_food = 0;
                 if (rnd(10) != 0)
                     cur.o_which = 0;
                 else
                     cur.o_which = 1;
                 break;
-case 3:
-        init_weapon(cur, pick_one(weap_info, MAXWEAPONS));
+            case 3:
+                init_weapon(cur, pick_one(weap_info));
                 if ((r = rnd(100)) < 10)
                 {
                     cur.o_flags |= ISCURSED;
@@ -256,9 +269,9 @@ case 3:
                 else if (r < 15)
                     cur.o_hplus += rnd(3) + 1;
                 break;
-case 4:
-        cur.o_type = ARMOR;
-                cur.o_which = pick_one(arm_info, MAXARMORS);
+            case 4:
+                cur.o_type = ARMOR;
+                cur.o_which = pick_one(arm_info);
                 cur.o_arm = a_class[cur.o_which];
                 if ((r = rnd(100)) < 20)
                 {
@@ -268,9 +281,9 @@ case 4:
                 else if (r < 28)
                     cur.o_arm -= rnd(3) + 1;
                 break;
-case 5:
-        cur.o_type = RING;
-                cur.o_which = pick_one(ring_info, MAXRINGS);
+            case 5:
+                cur.o_type = RING;
+                cur.o_which = pick_one(ring_info);
                 switch (cur.o_which)
                 {
                     case R_ADDSTR:
@@ -283,68 +296,60 @@ case 5:
                             cur.o_flags |= ISCURSED;
                         }
                         break;
-case R_AGGR:
-        case R_TELEPORT:
+                    case R_AGGR:
+                    case R_TELEPORT:
                         cur.o_flags |= ISCURSED;
+                        break;
                 }
                 break;
-case 6:
-        cur.o_type = STICK;
-                cur.o_which = pick_one(ws_info, MAXSTICKS);
+            case 6:
+                cur.o_type = STICK;
+                cur.o_which = pick_one(ws_info);
                 fix_stick(cur);
 #if MASTER
-break;
-default:
+                break;
+            default:
                 debug("Picked a bad kind of object");
                 wait_for(' ');
+                break;
 #endif
         }
+
         return cur;
     }
 
-    /*
-     * pick_one:
-     *    Pick an item out of a list of nitems possible objects
-     */
-    int
-    pick_one(obj_info* info, int nitems)
+    /// <summary>
+    /// Pick an item out of a collection of possible objects
+    /// </summary>
+    int pick_one(obj_info[] items)
     {
-        obj_info *end;
-        obj_info *start;
-        int i;
+        int value = rnd(100);
 
-        start = info;
-        for (end = &info[nitems], i = rnd(100); info < end; info++)
-            if (i < info.oi_prob)
-                break;
-        if (info == end)
+        for (int i = 0; i<items.Length; i++)
         {
-#if MASTER
-            if (wizard)
-            {
-                msg("bad pick_one: %d from %d items", i, nitems);
-                for (info = start; info < end; info++)
-                    msg("%s: %d%%", info.oi_name, info.oi_prob);
-            }
-#endif
-            info = start;
+            obj_info item = items[i];
+            if (value < item.oi_prob)
+                return i;
         }
-        return (int) (info - start);
+
+#if MASTER
+        if (wizard)
+        {
+            msg($"bad pick_one: {value} from {items.Length} items");
+            foreach (obj_info item in items)
+            {
+                msg($"{item.oi_name}: {item.oi_prob}%");
+            }
+        }
+#endif
+
+        return 0;
     }
 
-    /*
-     * discovered:
-     *    list what the player has discovered in this game of a certain type
-     */
-    static int line_cnt = 0;
-
-    static bool newpage = false;
-
-    static char *lastfmt, *lastarg;
-
-
-void
-discovered()
+    /// <summary>
+    /// list what the player has discovered in this game of a certain type
+    /// </summary>
+    void discovered()
     {
         char ch;
         bool disc_list;
@@ -358,12 +363,13 @@ discovered()
             if (!terse)
                 addmsg(" of object do you want a list");
             msg("? (* for all)");
-            ch = readchar();
+            ch = readchar().KeyChar;
             switch (ch)
             {
                 case ESCAPE:
                     msg("");
                     return;
+
                 case POTION:
                 case SCROLL:
                 case RING:
@@ -371,13 +377,16 @@ discovered()
                 case '*':
                     disc_list = true;
                     break;
+
                 default:
                     if (terse)
                         msg("Not a type");
                     else
                         msg("Please type one of %c%c%c%c (ESCAPE to quit)", POTION, SCROLL, RING, STICK);
+                    break;
             }
         } while (!disc_list);
+
         if (ch == '*')
         {
             print_disc(POTION);
@@ -396,19 +405,16 @@ discovered()
         }
     }
 
-    /*
-     * print_disc:
-     *    Print what we've discovered of type 'type'
-     */
-    void
-    print_disc(char type)
+    /// <summary>
+    /// Print what we've discovered of type 'type'
+    /// </summary>
+    void print_disc(char type)
     {
         int MAX4(int a,int b,int c,int d) => Math.Max(Math.Max(a,b), Math.Max(c,d));
 
-        obj_info *info = null;
-        int i, maxnum = 0, num_found;
-        static THING obj;
-        static int order[MAX4(MAXSCROLLS, MAXPOTIONS, MAXRINGS, MAXSTICKS)];
+        obj_info[] info;
+        int i, maxnum, num_found;
+        int[] order = new int[MAX4(MAXSCROLLS, MAXPOTIONS, MAXRINGS, MAXSTICKS)];
 
         switch (type)
         {
@@ -428,105 +434,112 @@ discovered()
                 maxnum = MAXSTICKS;
                 info = ws_info;
                 break;
+            default:
+                return;
         }
+
         set_order(order, maxnum);
+
+        THING obj = new();
         obj.o_count = 1;
         obj.o_flags = 0;
         num_found = 0;
+
         for (i = 0; i < maxnum; i++)
-            if (info[order[i]].oi_know || info[order[i]].oi_guess)
+        {
+            if (info[order[i]].oi_know || (info[order[i]].oi_guess != null))
             {
                 obj.o_type = type;
                 obj.o_which = order[i];
-                add_line("%s", inv_name(&obj, false));
+                add_line("%s", inv_name(obj, false));
                 num_found++;
             }
+        }
+
         if (num_found == 0)
             add_line(nothing(type), null);
     }
 
-    /*
-     * set_order:
-     *    Set up order for list
-     */
-
-    void
-    set_order(int* order, int numthings)
+    /// <summary>
+    /// Set up order for list
+    /// </summary>
+    void set_order(int[] order, int numthings)
     {
-        int i, r, t;
-
-        for (i = 0; i< numthings; i++)
-            order[i] = i;
-
-        for (i = numthings; i > 0; i--)
+        for (int i = 0; i < numthings; i++)
         {
-            r = rnd(i);
-            t = order[i - 1];
+            order[i] = i;
+        }
+
+        for (int i = numthings; i > 0; i--)
+        {
+            int r = rnd(i);
+            int t = order[i - 1];
             order[i - 1] = order[r];
             order[r] = t;
         }
     }
 
-    /*
-     * add_line:
-     *    Add a line to the list of discoveries
-     */
-    /* VARARGS1 */
-    char
-    add_line(char* fmt, char* arg)
-    {
-        WINDOW *tw, *sw;
-        int x, y;
-        char *prompt = "--Press space to continue--";
-        static int maxlen = -1;
+    private int _add_line_maxlen = -1;
 
-        if (line_cnt == 0)
+    /// <summary>
+    /// Add a line to the list of discoveries
+    /// </summary>
+    char add_line(string? fmt, object? arg)
+    {
+        const string prompt = "--Press space to continue--";
+
+        if (_things_line_cnt == 0)
         {
             wclear(hw);
             if (inv_type == INV_SLOW)
                 mpos = 0;
         }
+
         if (inv_type == INV_SLOW)
         {
-            if (*fmt != '\0')
+            if ((fmt != null) && (fmt != string.Empty))
+            {
                 if (msg(fmt, arg) == ESCAPE)
                     return ESCAPE;
-            line_cnt++;
+            }
+
+            _things_line_cnt++;
         }
         else
         {
-            if (maxlen < 0)
-                maxlen = (int) strlen(prompt);
-            if (line_cnt >= LINES - 1 || fmt == null)
+            if (_add_line_maxlen < 0)
+                _add_line_maxlen = prompt.Length;
+
+            if (_things_line_cnt >= LINES - 1 || fmt == null)
             {
-                if (inv_type == INV_OVER && fmt == null && !newpage)
+                if (inv_type == INV_OVER && fmt == null && !_things_newpage)
                 {
                     msg("");
                     refresh();
-                    tw = newwin(line_cnt + 1, maxlen + 2, 0, COLS - maxlen - 3);
-                    sw = subwin(tw, line_cnt + 1, maxlen + 1, 0, COLS - maxlen - 2);
-                    for (y = 0; y <= line_cnt; y++)
+                    CursesWindow tw = newwin(_things_line_cnt + 1, _add_line_maxlen + 2, 0, COLS - _add_line_maxlen - 3);
+                    CursesWindow sw = subwin(tw, _things_line_cnt + 1, _add_line_maxlen + 1, 0, COLS - _add_line_maxlen - 2);
+                    for (int y = 0; y <= _things_line_cnt; y++)
                     {
                         wmove(sw, y, 0);
-                        for (x = 0; x <= maxlen; x++)
+                        for (int x = 0; x <= _add_line_maxlen; x++)
                             waddch(sw, mvwinch(hw, y, x));
                     }
-                    wmove(tw, line_cnt, 1);
+                    wmove(tw, _things_line_cnt, 1);
                     waddstr(tw, prompt);
                     /*
                      * if there are lines below, use 'em
                      */
                     if (LINES > NUMLINES)
                     {
-                        if (NUMLINES + line_cnt > LINES)
-                            mvwin(tw, LINES - (line_cnt + 1), COLS - maxlen - 3);
+                        if (NUMLINES + _things_line_cnt > LINES)
+                            mvwin(tw, LINES - (_things_line_cnt + 1), COLS - _add_line_maxlen - 3);
                         else
                             mvwin(tw, NUMLINES, 0);
                     }
                     touchwin(tw);
                     wrefresh(tw);
                     wait_for(' ');
-                    if (md_hasclreol())
+                    //if (md_hasclreol())
                     {
                         werase(tw);
                         leaveok(tw, true);
@@ -545,77 +558,76 @@ discovered()
                     wclear(hw);
                     touchwin(stdscr);
                 }
-                newpage = true;
-                line_cnt = 0;
-                maxlen = (int) strlen(prompt);
+                _things_newpage = true;
+                _things_line_cnt = 0;
+                _add_line_maxlen = prompt.Length;
             }
-            if (fmt != null && !(line_cnt == 0 && *fmt == '\0'))
+            if (fmt != null && !(_things_line_cnt == 0 && fmt == string.Empty))
             {
-                mvwprintw(hw, line_cnt++, 0, fmt, arg);
-                getyx(hw, y, x);
-                if (maxlen < x)
-                    maxlen = x;
-                lastfmt = fmt;
-                lastarg = arg;
+                mvwprintw(hw, _things_line_cnt++, 0, fmt, arg);
+                getyx(hw, out int y, out int x);
+                if (_add_line_maxlen < x)
+                    _add_line_maxlen = x;
+                _things_lastfmt = fmt;
+                _things_lastarg = arg;
             }
         }
-        return ~ESCAPE;
+
+        return unchecked((char) ~ESCAPE);
     }
 
-    /*
-     * end_line:
-     *    End the list of lines
-     */
-
-    void
-    end_line()
+    /// <summary>
+    /// End the list of lines
+    /// </summary>
+    void end_line()
     {
         if (inv_type != INV_SLOW)
         {
-            if (line_cnt == 1 && !newpage)
+            if (_things_line_cnt == 1 && !_things_newpage)
             {
                 mpos = 0;
-                msg(lastfmt, lastarg);
+
+                if (_things_lastfmt != null)
+                    msg(_things_lastfmt, _things_lastarg);
             }
             else
-                add_line((char*) null, null);
+            {
+                add_line(null, null);
+            }
         }
-        line_cnt = 0;
-        newpage = false;
+
+        _things_line_cnt = 0;
+        _things_newpage = false;
     }
 
-    /*
-     * nothing:
-     *    Set up prbuf so that message for "nothing found" is there
-     */
-    char*
-    nothing(char type)
+    /// <summary>
+    /// Returns a message indicating "nothing found"
+    /// </summary>
+    string nothing(char type)
     {
-        char *sp, *tystr = null;
+        StringBuilder builder = new(64);
 
         if (terse)
-            sprintf(prbuf, "Nothing");
+            builder.Append("Nothing");
         else
-            sprintf(prbuf, "Haven't discovered anything");
+            builder.Append("Haven't discovered anything");
+
         if (type != '*')
         {
-            sp = &prbuf[strlen(prbuf)];
-            switch (type)
+            string description = type switch
             {
-                case POTION:
-                    tystr = "potion";
-                    break;
-case SCROLL: tystr = "scroll";
-                    break;
-case RING: tystr = "ring";
-                    break;
-case STICK: tystr = "stick";
-            }
-            sprintf(sp, " about any %ss", tystr);
+                POTION => "potion",
+                SCROLL => "scroll",
+                RING => "ring",
+                STICK => "stick",
+                _ => "unknown",
+            };
+
+            builder.AppendFormat(" about any %ss", description);
         }
-        return prbuf;
+
+        return builder.ToString();
     }
-#endif
 
     /// <summary>
     /// Give the proper name to a potion, stick, or ring and places the description
@@ -652,15 +664,11 @@ case STICK: tystr = "stick";
     /// </summary>
     string nullstr(THING ignored) => string.Empty;
 
-#if false
 #if MASTER
-    /*
-     * pr_list:
-     *    List possible potions, scrolls, etc. for wizard.
-     */
-
-    void
-    pr_list()
+    /// <summary>
+    /// List possible potions, scrolls, etc. for wizard.
+    /// </summary>
+    void pr_list()
     {
         int ch;
 
@@ -670,56 +678,52 @@ case STICK: tystr = "stick";
         if (!terse)
             addmsg(" of object do you want a list");
         msg("? ");
-        ch = readchar();
+        ch = readchar().KeyChar;
+
         switch (ch)
         {
             case POTION:
-                pr_spec(pot_info, MAXPOTIONS);
+                pr_spec(pot_info);
                 break;
             case SCROLL:
-                pr_spec(scr_info, MAXSCROLLS);
+                pr_spec(scr_info);
                 break;
             case RING:
-                pr_spec(ring_info, MAXRINGS);
+                pr_spec(ring_info);
                 break;
             case STICK:
-                pr_spec(ws_info, MAXSTICKS);
+                pr_spec(ws_info);
                 break;
             case ARMOR:
-                pr_spec(arm_info, MAXARMORS);
+                pr_spec(arm_info);
                 break;
             case WEAPON:
-                pr_spec(weap_info, MAXWEAPONS);
+                pr_spec(weap_info);
                 break;
             default:
                 return;
         }
     }
 
-    /*
-     * pr_spec:
-     *    Print specific list of possible items to choose from
-     */
-
-    void
-    pr_spec(obj_info* info, int nitems)
+    /// <summary>
+    /// Print specific list of possible items to choose from
+    /// </summary>
+    void pr_spec(obj_info[] info)
     {
-        obj_info *endp;
-        int i, lastprob;
+        char ch = '0';
+        int lastprob = 0;
 
-        endp = &info[nitems];
-        lastprob = 0;
-        for (i = '0'; info < endp; i++)
+        foreach (obj_info item in info)
         {
-            if (i == '9' + 1)
-                i = 'a';
-            sprintf(prbuf, "%c: %%s (%d%%%%)", i, info.oi_prob - lastprob);
-            lastprob = info.oi_prob;
-            add_line(prbuf, info.oi_name);
-            info++;
+            string format = $"{ch}: %s ({item.oi_prob - lastprob}%%)";
+            lastprob = item.oi_prob;
+            add_line(format, item.oi_name);
+
+            if (++ch == '9' + 1)
+                ch = 'a';
         }
+
         end_line();
     }
-#endif
 #endif
 }

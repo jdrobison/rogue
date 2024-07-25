@@ -63,51 +63,42 @@ internal partial class Program
         return chat(y, x);
     }
     
-    bool ce(coord a, coord b) => (a.x == b.x && a.y == b.y);
+    bool ce(coord a, coord b) => (a == b);
     
-    coord hero => player.t_pos;
+    ref coord hero => ref player.t_pos;
 
-    stats pstats
-    {
-        get => player.t_stats;
-        set => player.t_stats = value;
-    }
+    ref stats pstats => ref player.t_stats;
 
-    THING? pack
-    {
-        get => player.t_pack;
-        set => player.t_pack = value;
-    }
+    ref THING? pack => ref player.t_pack;
 
-    room proom => player.t_room;
+    ref room proom => ref player.t_room;
 
-    int max_hp => pstats.s_maxhp;
-
-    //const int attach(a,b)    _attach(&a,b)
-    //const int detach(a,b)    _detach(&a,b)
-    //const int free_list(a)    _free_list(&a)
+    ref int max_hp => ref pstats.s_maxhp;
 
     int max(int a, int b) => Math.Max(a, b);
 
     bool on(THING thing, int flag) => (thing.t_flags & flag) != 0;
 
-    int GOLDCALC => rnd(50 + 10 * level) + 2;
+    int GOLDCALC => rnd(50 + (10 * level)) + 2;
 
     bool ISRING(int h, int r) => (cur_ring[h]?.o_which == r);
 
     bool ISWEARING(int r) => (ISRING(LEFT, r) || ISRING(RIGHT, r));
 
-    bool ISMULT(int type) => (type == POTION || type == SCROLL || type == FOOD);
+    bool ISMULT(int type) => (type is POTION or SCROLL or FOOD);
 
-    PLACE INDEX(int y, int x) => places[x << 5 + y];
+    PLACE INDEX(int y, int x) => places[x << (5 + y)];
 
     PLACE place_at(int y, int x) => INDEX(y, x);
 
-    char chat(int y, int x) => INDEX(y, x).p_ch;
+    char chat(int y, int x) => place_at(y, x).p_ch;
+    void set_chat(int y, int x, char value) => place_at(y, x).p_ch = value;
+
+    byte flat(int y, int x)  => place_at(y,x).p_flags;
+    void set_flat(int y, int x, byte value) => place_at(y,x).p_flags = value;
     
-    char flat(int y, int x)  => INDEX(y,x).p_flags;
-    
-    THING? moat(int y, int x) => INDEX(y,x).p_monst;
+    THING? moat(int y, int x) => place_at(y,x).p_monst;
+    void set_moat(int y, int x, THING? value) => place_at(y,x).p_monst = value;
 
     //const int unc(cp)        (cp).y, (cp).x
 
@@ -138,7 +129,7 @@ internal partial class Program
     const char RING     = '=';
     const char STICK    = '/';
     const int  CALLABLE = -1;
-    const int  R_OR_S   = -2;
+    const char R_OR_S   = unchecked((char) -2);
 
 /*
  * Various constants
@@ -218,13 +209,13 @@ internal partial class Program
     /*
      * Flags for level map
      */
-    const int F_PASS    = 0x80;         /* is a passageway */
-    const int F_SEEN    = 0x40;         /* have seen this spot before */
-    const int F_DROPPED = 0x20;         /* object was dropped here */
-    const int F_LOCKED  = 0x20;         /* door is locked */
-    const int F_REAL    = 0x10;         /* what you see is what you get */
-    const int F_PNUM    = 0x0f;         /* passage number mask */
-    const int F_TMASK   = 0x07;         /* trap number mask */
+    const byte F_PASS    = 0x80;         /* is a passageway */
+    const byte F_SEEN    = 0x40;         /* have seen this spot before */
+    const byte F_DROPPED = 0x20;         /* object was dropped here */
+    const byte F_LOCKED  = 0x20;         /* door is locked */
+    const byte F_REAL    = 0x10;         /* what you see is what you get */
+    const byte F_PNUM    = 0x0f;         /* passage number mask */
+    const byte F_TMASK   = 0x07;         /* trap number mask */
 
     /*
      * Trap types

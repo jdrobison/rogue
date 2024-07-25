@@ -1,28 +1,20 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Diagnostics.Metrics;
-using System.Linq;
-using System.Numerics;
-using System.Runtime.CompilerServices;
-using System.Text;
-using System.Threading.Tasks;
-
-using Microsoft.Win32;
-
-using RogueSharp.Things;
-
-using static RogueSharp.Helpers.CursesHelper;
+﻿using static RogueSharp.Helpers.CursesHelper;
 
 namespace RogueSharp;
 
 internal partial class Program
 {
-#if false
     /// <summary>
-    /// A healing daemon that restors hit points after rest
+    /// A do-nothing daemon
     /// </summary>
-    void doctor(int _)
+    void noop(int _ = 0)
+    {
+    }
+
+    /// <summary>
+    /// A healing daemon that restores hit points after rest
+    /// </summary>
+    void doctor(int _ = 0)
     {
         int lv, ohp;
 
@@ -52,7 +44,7 @@ internal partial class Program
     /// <summary>
     /// Called when it is time to start rolling for wandering monsters
     /// </summary>
-    void swander(int _)
+    void swander(int _ = 0)
     {
         start_daemon(rollwand, 0, BEFORE);
     }
@@ -62,7 +54,7 @@ internal partial class Program
     /// <summary>
     /// Called to roll to see if a wandering monster starts up
     /// </summary>
-    void rollwand(int _)
+    void rollwand(int _ = 0)
     {
         if (++rollwand_between >= 4)
         {
@@ -72,31 +64,30 @@ internal partial class Program
                 kill_daemon(rollwand);
                 fuse(swander, 0, WANDERTIME, BEFORE);
             }
+
             rollwand_between = 0;
         }
     }
-#endif
 
     /// <summary>
     /// Release the poor player from his confusion
     /// </summary>
-    void unconfuse(int _)
+    void unconfuse(int _ = 0)
     {
         player.t_flags &= ~ISHUH;
         msg("you feel less %s now", choose_str("trippy", "confused"));
     }
 
-#if false
     /// <summary>
     /// Turn off the ability to see invisible
     /// </summary>
-    void unsee(int _)
+    void unsee(int _ = 0)
     {
-        THING th;
+        THING? th;
 
         for (th = mlist; th != null; th = next(th))
         {
-            if (on(*th, ISINVIS) && see_monst(th))
+            if (on(th, ISINVIS) && see_monst(th))
                 mvaddch(th.t_pos.y, th.t_pos.x, th.t_oldch);
         }
 
@@ -106,14 +97,14 @@ internal partial class Program
     /// <summary>
     /// He gets his sight back
     /// </summary>
-    void sight(int _)
+    void sight(int _ = 0)
     {
         if (on(player, ISBLIND))
         {
             extinguish(sight);
             player.t_flags &= ~ISBLIND;
             if ((proom.r_flags & ISGONE) == 0)
-                enter_room(&hero);
+                enter_room(hero);
             msg(choose_str("far out!  Everything is all cosmic again",
                        "the veil of darkness lifts"));
         }
@@ -122,7 +113,7 @@ internal partial class Program
     /// <summary>
     /// End the hasting
     /// </summary>
-    void nohaste(int _)
+    void nohaste(int _ = 0)
     {
         player.t_flags &= ~ISHASTE;
         msg("you feel yourself slowing down");
@@ -131,7 +122,7 @@ internal partial class Program
     /// <summary>
     /// Digest the hero's food
     /// </summary>
-    void stomach(int _)
+    void stomach(int _ = 0)
     {
         int oldfood;
         int orig_hungry = hungry_state;
@@ -143,19 +134,23 @@ internal partial class Program
             /*
              * the hero is fainting
              */
-            if (no_command || rnd(5) != 0)
+            if ((no_command != 0) || (rnd(5) != 0))
                 return;
             no_command += rnd(8) + 4;
             hungry_state = 3;
+            
             if (!terse)
+            {
                 addmsg(choose_str("the munchies overpower your motor capabilities.  ",
-                          "you feel too weak from lack of food.  "));
+                          "you feel too weak from lack of food.  ")!);
+            }
+
             msg(choose_str("You freak out", "You faint"));
         }
         else
         {
             oldfood = food_left;
-            food_left -= ring_eat(LEFT) + ring_eat(RIGHT) + 1 - amulet;
+            food_left -= ring_eat(LEFT) + ring_eat(RIGHT) + 1 - Convert.ToInt32(amulet);
 
             if (food_left < MORETIME && oldfood >= MORETIME)
             {
@@ -173,6 +168,7 @@ internal partial class Program
                                "you are starting to get hungry"));
             }
         }
+
         if (hungry_state != orig_hungry)
         {
             player.t_flags &= ~ISRUN;
@@ -185,9 +181,8 @@ internal partial class Program
     /// <summary>
     /// Take the hero down off her acid trip.
     /// </summary>
-    void come_down(int _)
+    void come_down(int _ = 0)
     {
-        THING tp;
         bool seemonst;
 
         if (!on(player, ISHALU))
@@ -202,24 +197,26 @@ internal partial class Program
         /*
          * undo the things
          */
-        for (tp = lvl_obj; tp != null; tp = next(tp))
+        for (THING? tp = lvl_obj; tp != null; tp = next(tp))
         {
             if (cansee(tp.o_pos.y, tp.o_pos.x))
-                mvaddch(tp.o_pos.y, tp.o_pos.x, tp.o_type);
+                mvaddch(tp.o_pos.y, tp.o_pos.x, (char) tp.o_type);
         }
 
         /*
          * undo the monsters
          */
         seemonst = on(player, SEEMONST);
-        for (tp = mlist; tp != null; tp = next(tp))
+        for (THING? tp = mlist; tp != null; tp = next(tp))
         {
             move(tp.t_pos.y, tp.t_pos.x);
             if (cansee(tp.t_pos.y, tp.t_pos.x))
-                if (!on(*tp, ISINVIS) || on(player, CANSEE))
+            {
+                if (!on(tp, ISINVIS) || on(player, CANSEE))
                     addch(tp.t_disguise);
                 else
                     addch(chat(tp.t_pos.y, tp.t_pos.x));
+            }
             else if (seemonst)
             {
                 standout();
@@ -227,15 +224,15 @@ internal partial class Program
                 standend();
             }
         }
+
         msg("Everything looks SO boring now.");
     }
 
     /// <summary>
     /// Change the characters for the player
     /// </summary>
-    void visuals(int _)
+    void visuals(int _ = 0)
     {
-        THING tp;
         bool seemonst;
 
         if (!after || (running && jump))
@@ -243,7 +240,7 @@ internal partial class Program
         /*
          * change the things
          */
-        for (tp = lvl_obj; tp != null; tp = next(tp))
+        for (THING? tp = lvl_obj; tp != null; tp = next(tp))
         {
             if (cansee(tp.o_pos.y, tp.o_pos.x))
                 mvaddch(tp.o_pos.y, tp.o_pos.x, rnd_thing());
@@ -259,7 +256,7 @@ internal partial class Program
          * change the monsters
          */
         seemonst = on(player, SEEMONST);
-        for (tp = mlist; tp != null; tp = next(tp))
+        for (THING? tp = mlist; tp != null; tp = next(tp))
         {
             move(tp.t_pos.y, tp.t_pos.x);
             if (see_monst(tp))
@@ -267,12 +264,12 @@ internal partial class Program
                 if (tp.t_type == 'X' && tp.t_disguise != 'X')
                     addch(rnd_thing());
                 else
-                    addch(rnd(26) + 'A');
+                    addch((char)(rnd(26) + 'A'));
             }
             else if (seemonst)
             {
                 standout();
-                addch(rnd(26) + 'A');
+                addch((char)(rnd(26) + 'A'));
                 standend();
             }
         }
@@ -281,11 +278,9 @@ internal partial class Program
     /// <summary>
     /// *	Land from a levitation potion
     /// </summary>
-    void land(int _)
+    void land(int _ = 0)
     {
         player.t_flags &= ~ISLEVIT;
-        msg(choose_str("bummer!  You've hit the ground",
-               "you float gently to the ground"));
+        msg(choose_str("bummer!  You've hit the ground", "you float gently to the ground"));
     }
-#endif
 }

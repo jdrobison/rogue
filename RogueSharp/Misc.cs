@@ -1,10 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using RogueSharp.Helpers;
 
 using static RogueSharp.Helpers.CursesHelper;
+
+using str_t = System.UInt32;
 
 namespace RogueSharp;
 
@@ -25,7 +23,8 @@ internal partial class Program
         room rp;
         int ey, ex;
         int passcount;
-        char pfl, fp, pch;
+        short pfl, fp;
+        char pch;
         int sy, sx, sumhero = 0, diffhero = 0;
 
 #if DEBUG
@@ -97,7 +96,7 @@ internal partial class Program
                     if (see_monst(tp))
                     {
                         if (on(player, ISHALU))
-                            ch = (char)(rnd(26) + 'A');
+                            ch = (char) (rnd(26) + 'A');
                         else
                             ch = tp.t_disguise;
                     }
@@ -115,7 +114,7 @@ internal partial class Program
 
                 if (door_stop && !firstmove && running)
                 {
-                    switch (runch)
+                    switch (runKey.Key)
                     {
                         case ConsoleKey.H:
                         case ConsoleKey.LeftArrow:
@@ -160,15 +159,15 @@ internal partial class Program
                             break;
 
                         case ConsoleKey.N:
-                        case ConsoleKey.End:
-                        case ConsoleKey.NumPad1:
+                        case ConsoleKey.PageDown:
+                        case ConsoleKey.NumPad3:
                             if ((y + x) - sumhero <= -1)
                                 continue;
                             break;
 
                         case ConsoleKey.B:
-                        case ConsoleKey.PageDown:
-                        case ConsoleKey.NumPad3:
+                        case ConsoleKey.End:
+                        case ConsoleKey.NumPad1:
                             if ((y - x) - diffhero <= -1)
                                 continue;
                             break;
@@ -196,10 +195,12 @@ internal partial class Program
                 }
             }
         }
+
         if (door_stop && !firstmove && passcount > 1)
             running = false;
         if (!running || !jump)
             mvaddch(hero.y, hero.x, PLAYER);
+
 #if DEBUG
         lookDone = false;
 #endif
@@ -293,19 +294,16 @@ internal partial class Program
         return null;
     }
 
-#if false
-    /*
-     * eat:
-     *    She wants to eat something, so let her try
-     */
-
-    void
-    eat()
+    /// <summary>
+    /// She wants to eat something, so let her try
+    /// </summary>
+    void eat()
     {
-        THING *obj;
+        THING? obj;
 
         if ((obj = get_item("eat", FOOD)) == null)
             return;
+
         if (obj.o_type != FOOD)
         {
             if (!terse)
@@ -314,17 +312,19 @@ internal partial class Program
                 msg("that's Inedible!");
             return;
         }
+
         if (food_left < 0)
             food_left = 0;
         if ((food_left += HUNGERTIME - 200 + rnd(400)) > STOMACHSIZE)
             food_left = STOMACHSIZE;
+
         hungry_state = 0;
+
         if (obj == cur_weapon)
             cur_weapon = null;
         if (obj.o_which == 1)
             msg("my, that was a yummy %s", fruit);
-        else
-        if (rnd(100) > 70)
+        else if (rnd(100) > 70)
         {
             pstats.s_exp++;
             msg("%s, this food tastes awful", choose_str("bummer", "yuk"));
@@ -332,16 +332,14 @@ internal partial class Program
         }
         else
             msg("%s, that tasted good", choose_str("oh, wow", "yum"));
+
         leave_pack(obj, false, false);
     }
 
-    /*
-     * check_level:
-     *    Check to see if the guy has gone up a level.
-     */
-
-    void
-    check_level()
+    /// <summary>
+    /// Check to see if the guy has gone up a level.
+    /// </summary>
+    void check_level()
     {
         int i, add, olevel;
 
@@ -360,48 +358,38 @@ internal partial class Program
         }
     }
 
-    /*
-     * chg_str:
-     *    used to modify the playes strength.  It keeps track of the
-     *    highest it has been, just in case
-     */
-
-    void
-    chg_str(int amt)
+    /// <summary>
+    /// Used to modify the player's strength.  It keeps track of the highest it has been, just in case.
+    /// </summary>
+    void chg_str(int amt)
     {
-        auto str_t comp;
+        str_t comp;
 
         if (amt == 0)
             return;
-        add_str(&pstats.s_str, amt);
+        add_str(ref pstats.s_str, amt);
         comp = pstats.s_str;
         if (ISRING(LEFT, R_ADDSTR))
-            add_str(&comp, -cur_ring[LEFT].o_arm);
+            add_str(ref comp, -cur_ring[LEFT]!.o_arm);
         if (ISRING(RIGHT, R_ADDSTR))
-            add_str(&comp, -cur_ring[RIGHT].o_arm);
+            add_str(ref comp, -cur_ring[RIGHT]!.o_arm);
         if (comp > max_stats.s_str)
             max_stats.s_str = comp;
     }
 
-    /*
-     * add_str:
-     *    Perform the actual add, checking upper and lower bound limits
-     */
-    void
-    add_str(str_t* sp, int amt)
+    /// <summary>
+    /// Perform the actual add, checking upper and lower bound limits
+    /// </summary>
+    void add_str(ref str_t sp, int amt)
     {
-        if ((*sp += amt) < 3)
-            *sp = 3;
-        else if (*sp > 31)
-            *sp = 31;
+        sp = (uint) (sp + amt);
+        Math.Clamp(sp, 3, 31);
     }
 
-    /*
-     * add_haste:
-     *    Add a haste to the player
-     */
-    bool
-    add_haste(bool potion)
+    /// <summary>
+    /// Add a haste to the player
+    /// </summary>
+    bool add_haste(bool potion)
     {
         if (on(player, ISHASTE))
         {
@@ -420,20 +408,16 @@ internal partial class Program
         }
     }
 
-    /*
-     * aggravate:
-     *    Aggravate all the monsters on this level
-     */
-
-    void
-    aggravate()
+    /// <summary>
+    /// Aggravate all the monsters on this level
+    /// </summary>
+    void aggravate()
     {
-        THING *mp;
-
-        for (mp = mlist; mp != null; mp = next(mp))
-            runto(&mp.t_pos);
+        for (THING? mp = mlist; mp != null; mp = next(mp))
+        {
+            runto(mp.t_pos);
+        }
     }
-#endif
 
     /// <summary>
     /// For printfs: if string starts with a vowel, return "n" for an "an".
@@ -458,44 +442,39 @@ internal partial class Program
         }
     }
 
-#if false
-    /* 
-     * is_current:
-     *    See if the object is one of the currently used items
-     */
-    bool
-    is_current(THING* obj)
+    /// <summary>
+    /// See if the object is one of the currently used items
+    /// </summary>
+    bool is_current(THING? obj)
     {
         if (obj == null)
             return false;
-        if (obj == cur_armor || obj == cur_weapon || obj == cur_ring[LEFT]
-        || obj == cur_ring[RIGHT])
+
+        if (obj == cur_armor || obj == cur_weapon || obj == cur_ring[LEFT] || obj == cur_ring[RIGHT])
         {
             if (!terse)
                 addmsg("That's already ");
             msg("in use");
             return true;
         }
+
         return false;
     }
 
-    /*
-     * get_dir:
-     *      Set up the direction co_ordinate for use in varios "prefix"
-     *    commands
-     */
-    bool
-    get_dir()
-    {
-        char *prompt;
-        bool gotit;
-        static coord last_delt= {0,0};
+    private coord _get_dir_last_delta;
 
-        if (again && last_dir != '\0')
+    /// <summary>
+    /// Set up the direction coordinate for use in various "prefix" commands
+    /// </summary>
+    bool get_dir()
+    {
+        string prompt;
+        bool gotit;
+
+        if (again && last_dirKey != default)
         {
-            delta.y = last_delt.y;
-            delta.x = last_delt.x;
-            dir_ch = last_dir;
+            delta = _get_dir_last_delta;
+            dirKey = last_dirKey;
         }
         else
         {
@@ -503,103 +482,87 @@ internal partial class Program
                 msg(prompt = "which direction? ");
             else
                 prompt = "direction: ";
+
             do
             {
-                gotit = true;
-                switch (dir_ch = readchar())
+                dirKey = readchar();
+
+                if (IsMovementKey(dirKey))
                 {
-                    case 'h':
-                    case 'H':
-                        delta.y =  0; delta.x = -1;
-                        break; case 'j': case 'J':
-        delta.y =  1; delta.x =  0;
-        break; case 'k': case 'K':
-        delta.y = -1; delta.x =  0;
-        break; case 'l': case 'L':
-        delta.y =  0; delta.x =  1;
-        break; case 'y': case 'Y':
-        delta.y = -1; delta.x = -1;
-        break; case 'u': case 'U':
-        delta.y = -1; delta.x =  1;
-        break; case 'b': case 'B':
-        delta.y =  1; delta.x = -1;
-        break; case 'n': case 'N':
-        delta.y =  1; delta.x =  1;
-        when ESCAPE: last_dir = '\0'; reset_last(); return false;
-    otherwise:
-        mpos = 0;
-        msg(prompt);
-        gotit = false;
-    }
-        } until(gotit);
-    if (isupper(dir_ch))
-        dir_ch = (char) tolower(dir_ch);
-    last_dir = dir_ch;
-    last_delt.y = delta.y;
-    last_delt.x = delta.x;
+                    delta = GetMovementDelta(dirKey);
+                    gotit = true;
+                }
+                else if (dirKey.Key == ConsoleKey.Escape)
+                {
+                    last_dirKey = default;
+                    reset_last();
+                    return false;
+                }
+                else
+                {
+                    mpos = 0;
+                    msg(prompt);
+                    gotit = false;
+                }
+
+            } while (!gotit);
+
+            last_dirKey = dirKey = dirKey.ToLower();
+            _get_dir_last_delta = delta;
         }
+
         if (on(player, ISHUH) && rnd(5) == 0)
-        do
         {
-            delta.y = rnd(3) - 1;
-            delta.x = rnd(3) - 1;
-        } while (delta.y == 0 && delta.x == 0);
-    mpos = 0;
-    return true;
+            do
+            {
+                delta.y = rnd(3) - 1;
+                delta.x = rnd(3) - 1;
+            } while (delta.y == 0 && delta.x == 0);
+        }
+
+        mpos = 0;
+        return true;
     }
 
-    /*
-     * sign:
-     *    Return the sign of the number
-     */
-    int
-    sign(int nm)
+    /// <summary>
+    /// Return the sign of the number
+    /// </summary>
+    int sign(int nm)
     {
         if (nm < 0)
             return -1;
-        else
-            return (nm > 0);
+
+        if (nm > 0)
+            return 1;
+
+        return 0;
     }
-#endif
 
     /// <summary>
-    /// Give a spread around a given number (+/- 20%)
+    /// Give a spread around a given number (+/- 5%)
     /// </summary>
     int spread(int nm)
     {
         return nm - (nm / 20) + rnd(nm / 10);
     }
 
-#if false
-    /*
-     * call_it:
-     *    Call an object something after use.
-     */
-
-    void
-    call_it(struct obj_info *info)
+    /// <summary>
+    /// Call an object something after use.
+    /// </summary>
+    void call_it(obj_info info)
     {
         if (info.oi_know)
         {
-            if (info.oi_guess)
-            {
-                free(info.oi_guess);
-                info.oi_guess = null;
-            }
+            info.oi_guess = null;
         }
-        else if (!info.oi_guess)
+        else if (info.oi_guess == null)
         {
             msg(terse ? "call it: " : "what do you want to call it? ");
-            if (get_str(prbuf, stdscr) == NORM)
-            {
-                if (info.oi_guess != null)
-                    free(info.oi_guess);
-                info.oi_guess = malloc((unsigned int) strlen(prbuf) + 1);
-                strcpy(info.oi_guess, prbuf);
-            }
+
+            if (get_str(out string guess, stdscr) == NORM)
+                info.oi_guess = guess;
         }
     }
-#endif
 
     static readonly char[] rnd_thing_list = { POTION, SCROLL, RING, STICK, FOOD, WEAPON, ARMOR, STAIRS, GOLD, AMULET };
 
@@ -621,7 +584,7 @@ internal partial class Program
     /// <param name="tripping"></param>
     /// <param name="normal"></param>
     /// <returns></returns>
-    string choose_str(string tripping, string normal)
+    string? choose_str(string? tripping, string? normal)
     {
         return (on(player, ISHALU) ? tripping : normal);
     }

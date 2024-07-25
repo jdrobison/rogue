@@ -105,71 +105,70 @@ internal partial class Program
             "name",
             "Name",
             () => put_str(whoami),
-            (win) => get_str(ref whoami, win),
-            (value) => strucpy(ref whoami, (string)value)),
+            (win) => get_str(out whoami, win),
+            (value) => strucpy(out whoami, (string)value)),
         new OPTION(
             OptionKind.String,
             "fruit",
             "Fruit",
             () => put_str(fruit),
-            (win) => get_str(ref fruit, win),
-            (value) => strucpy(ref fruit, (string)value)),
+            (win) => get_str(out fruit, win),
+            (value) => strucpy(out fruit, (string)value)),
         new OPTION(
             OptionKind.String,
             "file",
             "Save file",
             () => put_str(file_name),
-            (win) => get_str(ref file_name, win),
-            (value) => strucpy(ref file_name, (string)value)),
+            (win) => get_str(out file_name, win),
+            (value) => strucpy(out file_name, (string)value)),
     ];
 
-#if false
-    /*
-     * option:
-     *    Print and then set options from the terminal
-     */
-
-    void
-    option()
+    /// <summary>
+    /// Print and then set options from the terminal
+    /// </summary>
+    void option()
     {
-        OPTION  *op;
-        int     retval;
-
         wclear(hw);
+
         /*
          * Display current values of options
          */
-        for (op = optlist; op <= &optlist[NUM_OPTS-1]; op++)
+        foreach (OPTION op in optlist)
         {
             pr_optname(op);
-            (*op->o_putfunc)(op->o_opt);
+            op.o_putfunc();
             waddch(hw, '\n');
         }
+
         /*
          * Set values
          */
         wmove(hw, 0, 0);
-        for (op = optlist; op <= &optlist[NUM_OPTS-1]; op++)
+        for (int i = 0; i<optlist.Length; i++)
         {
+            OPTION op = optlist[i];
+
             pr_optname(op);
-            retval = (*op->o_getfunc)(op->o_opt, hw);
-            if (retval)
+            int retval = op.o_getfunc(hw);
+            if (retval != 0)
             {
                 if (retval == QUIT)
                     break;
-                else if (op > optlist)
+
+                if (i > 0)
                 {   /* MINUS */
-                    wmove(hw, (int) (op - optlist) - 1, 0);
-                    op -= 2;
+                    wmove(hw, i - 1, 0);
+                    i -= 2;
                 }
                 else    /* trying to back up beyond the top */
                 {
-                    putchar('\a');
+                    Console.Write('\a');
                     wmove(hw, 0, 0);
-                    op--;
+                    i--;
                 }
             }
         }
+
         /*
          * Switch back to original screen
          */
@@ -181,7 +180,6 @@ internal partial class Program
         touchwin(stdscr);
         after = false;
     }
-#endif
 
     /// <summary>
     /// Print out the option name prompt
@@ -289,7 +287,7 @@ internal partial class Program
     /// <summary>
     /// Set a string option
     /// </summary>
-    int get_str(ref string value, WINDOW win)
+    int get_str(out string value, WINDOW win)
     {
         int oy, ox;
         int i;
@@ -334,14 +332,18 @@ internal partial class Program
                     continue;
                 }
             }
-            if (Char.IsAscii(c) && (c != ' '))
+            if (char.IsAscii(c) && (c != ' '))
             {
                 builder.Append(c);
                 waddch(win, c);
             }
         }
+
         if (builder.Length > 0)   /* only change option if something has been typed */
-            strucpy(ref value, builder.ToString());
+            strucpy(out value, builder.ToString());
+        else
+            value = string.Empty;
+
         mvwprintw(win, oy, ox, "%s\n", value);
         wrefresh(win);
         if (win == stdscr)
@@ -403,19 +405,28 @@ internal partial class Program
 
 
 #if MASTER
-    /*
-     * get_num:
-     */
     /// <summary>
     /// Get a numeric option
     /// </summary>
     int get_num(ref short value, WINDOW win)
     {
         int i;
-        string s = string.Empty;
 
-        if ((i = get_str(ref s, win)) == NORM)
+        if ((i = get_str(out string s, win)) == NORM)
             value = short.Parse(s);
+
+        return i;
+    }
+
+    /// <summary>
+    /// Get a numeric option
+    /// </summary>
+    int get_num(ref int value, WINDOW win)
+    {
+        int i;
+
+        if ((i = get_str(out string s, win)) == NORM)
+            value = int.Parse(s);
 
         return i;
     }
@@ -485,7 +496,7 @@ internal partial class Program
     /// <summary>
     /// Copy string using unctrl for things
     /// </summary>
-    void strucpy(ref string s1, string s2)
+    void strucpy(out string s1, string s2)
     {
         StringBuilder builder = new StringBuilder(s2.Length);
 

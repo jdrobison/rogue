@@ -3,6 +3,8 @@
 using Windows.Win32;
 using Windows.Win32.System.Console;
 
+using static RogueSharp.Helpers.CharInfoAttributes;
+
 namespace RogueSharp.Helpers;
 
 internal static class ConsoleHelper
@@ -101,6 +103,7 @@ internal static class ConsoleHelper
             // copy the region of the input buffer that we're going to write into a CHAR_INFO array
             int i = 0;
             CHAR_INFO* char_infos = stackalloc CHAR_INFO[consoleWidth * consoleHeight];
+            CharInfoAttributes attributes = FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED;
 
             for (int y = 0; y < consoleHeight; y++)
             {
@@ -112,7 +115,7 @@ internal static class ConsoleHelper
 
                     var char_info = new CHAR_INFO();
                     char_info.Char.UnicodeChar = buffer[bufferIndex];
-                    char_info.Attributes = 0x0007;  // FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED
+                    char_info.Attributes = (ushort) attributes;
 
                     char_infos[i++] = char_info;
                 }

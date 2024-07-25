@@ -16,7 +16,7 @@ internal partial class Program
 {
     private bool after;                 /* true if we want after daemons */
     private bool again;                 /* Repeating the last command */
-    private int  noscore;               /* Was a wizard sometime */
+    private bool noscore;               /* Was a wizard sometime */
     private bool seenstairs;            /* Have seen the stairs (for lsd) */
     private bool amulet;                /* He found the amulet */
     private bool door_stop;             /* Stop running when we pass a door */
@@ -42,17 +42,17 @@ internal partial class Program
     private bool to_death;              /* Fighting is to the death! */
     private bool tombstone = true;      /* Print out tombstone at end */
 #if MASTER
-    private readonly bool wizard;       /* true if allows wizard commands */
+    private bool wizard;                /* true if allows wizard commands */
 #endif
     private bool[] pack_used = new bool[26];         /* Is the character used in the pack? */
 
-    private char dir_ch;                                    /* Direction from last get_dir() call */
+    private ConsoleKeyInfo dirKey;                          /* Direction from last get_dir() call */
     private string file_name;                               /* Save file name */
     private string huh;                                     /* The last message printed */
     private string[] p_colors = new string[MAXPOTIONS];     /* Colors of the potions */
 //  private string prbuf;                                   /* buffer for sprintfs */
     private string[] r_stones = new string[MAXRINGS];       /* Stone settings of the rings */
-    private ConsoleKey runch;                               /* Direction player is running */
+    private ConsoleKeyInfo runKey;                          /* Direction player is running */
     private string[] s_names = new string[MAXSCROLLS];      /* Names of the scrolls */
     private char take;                                      /* Thing she is taking */
     private string whoami;                                  /* Name of player */
@@ -60,16 +60,17 @@ internal partial class Program
     private string[] ws_type = new string[MAXSTICKS];       /* Is it a wand or a staff */
     private int  orig_dsusp;                                /* Original dsusp char */
     private string fruit = "slime-mold";                    /* Favorite fruit */
-    private readonly string home;                           /* User's home directory */
-    private string[] inv_t_name = {
+    private string home;                                    /* User's home directory */
+    private string[] inv_t_name = 
+    {
         "Overwrite",
         "Slow",
         "Clear"
     };
-    private char l_last_comm = '\0';                        /* Last last_comm */
-    private char l_last_dir = '\0';                         /* Last last_dir */
-    private char last_comm = '\0';                          /* Last command typed */
-    private char last_dir = '\0';                           /* Last direction given */
+    private ConsoleKeyInfo l_last_commKey;                  /* Last last_comm */
+    private ConsoleKeyInfo l_last_dirKey;                   /* Last last_dirKey */
+    private ConsoleKeyInfo last_commKey;                    /* Last command typed */
+    private ConsoleKeyInfo last_dirKey;                     /* Last direction given */
     private string[] tr_name =                              /* Names of the traps */
     {
         "a trapdoor",
@@ -154,7 +155,7 @@ internal partial class Program
     private THING? last_pick;                   /* Last object picked in get_item() */
     private THING? lvl_obj;                     /* List of objects on this level */
     private THING? mlist;                       /* List of monsters on the level */
-    public readonly THING player = new();       /* His stats */
+    public THING player = new();                /* His stats */
     /* restart of game */
 
     private WINDOW hw;                          /* used as a scratch window */
@@ -182,7 +183,7 @@ internal partial class Program
         new room() { r_flags = ISGONE | ISDARK },
     };
 
-    private monster[] monsters = new monster[26]
+    private monster[] monsters =
     {
         /*  Name          Carry  Flags                          str,  exp, lvl, amr, hpt, dmg */
         new("aquator",        0, ISMEAN,               new stats(10,   20,   5,   2,   1, "0x0/0x0")),
@@ -222,7 +223,9 @@ internal partial class Program
         return ch - 'A';
     }
 
-    public string GetMonsterName(char ch) => monsters[GetMonsterIndex(ch)].m_name;
+    public monster GetMonster(char ch) => monsters[GetMonsterIndex(ch)];
+
+    public string GetMonsterName(char ch) => GetMonster(ch).m_name;
 
     private obj_info[] things = new obj_info[NUMTHINGS]
     {
